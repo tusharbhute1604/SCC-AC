@@ -1,0 +1,1025 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SCC-AC Complete Analysis — AWS + Salesforce Reference</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-size:14px;line-height:1.6;background:#f8f7f5;color:#1a1a18}
+.layout{display:grid;grid-template-columns:240px 1fr;min-height:100vh}
+/* SIDEBAR */
+.sidebar{background:#1a1918;color:#c8c6be;position:sticky;top:0;height:100vh;overflow-y:auto;padding:0}
+.sidebar-header{padding:20px 16px 12px;border-bottom:1px solid #2e2d2b}
+.sidebar-logo{font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:#888;margin-bottom:4px}
+.sidebar-title{font-size:15px;font-weight:600;color:#f0ede6;line-height:1.3}
+.nav-section{padding:12px 0 4px 16px;font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:#555;font-weight:600}
+.nav-item{display:block;padding:7px 16px;font-size:13px;color:#9a9890;cursor:pointer;border-left:2px solid transparent;transition:all .15s;text-decoration:none}
+.nav-item:hover{color:#f0ede6;background:#252422}
+.nav-item.active{color:#FF9900;border-left-color:#FF9900;background:#252422}
+.nav-sub{padding:5px 16px 5px 28px;font-size:12px;color:#666;cursor:pointer;display:block;text-decoration:none}
+.nav-sub:hover{color:#9a9890}
+/* CONTENT */
+.content{padding:0;overflow:hidden}
+.section{display:none;padding:32px 40px;min-height:100vh;max-width:940px}
+.section.active{display:block}
+/* TYPOGRAPHY */
+h1{font-size:26px;font-weight:700;color:#0f0e0d;margin-bottom:8px;letter-spacing:-.02em}
+h2{font-size:20px;font-weight:600;color:#1a1918;margin:32px 0 12px;padding-bottom:8px;border-bottom:1px solid #e8e6e0}
+h3{font-size:16px;font-weight:600;color:#2a2927;margin:24px 0 8px}
+h4{font-size:13px;font-weight:600;color:#444;margin:16px 0 6px;text-transform:uppercase;letter-spacing:.05em}
+p{margin-bottom:10px;color:#3a3935;line-height:1.7}
+.lead{font-size:15px;color:#555;margin-bottom:24px;line-height:1.6}
+/* BADGES */
+.badge{display:inline-block;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:600;letter-spacing:.02em;vertical-align:middle}
+.badge-aws{background:#FF9900;color:#000}
+.badge-sf{background:#00A1E0;color:#fff}
+.badge-sccac{background:#6B4FBB;color:#fff}
+.badge-must{background:#d73a49;color:#fff}
+.badge-should{background:#e66200;color:#fff}
+.badge-nice{background:#2da44e;color:#fff}
+/* TABLES */
+.tbl-wrap{overflow-x:auto;margin:16px 0 24px;border-radius:8px;border:1px solid #e0ddd6;box-shadow:0 1px 3px rgba(0,0,0,.06)}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th{background:#f3f1ec;padding:10px 14px;text-align:left;font-weight:600;font-size:12px;text-transform:uppercase;letter-spacing:.05em;color:#555;border-bottom:1px solid #e0ddd6;white-space:nowrap}
+td{padding:10px 14px;border-bottom:1px solid #eeece6;vertical-align:top;line-height:1.5}
+tr:last-child td{border-bottom:none}
+tr:hover td{background:#faf9f6}
+td code,th code{background:#f0ede6;padding:1px 5px;border-radius:3px;font-size:12px;font-family:'SF Mono',Consolas,monospace;color:#c7254e}
+/* CARDS */
+.card-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:16px;margin:16px 0}
+.card{background:#fff;border:1px solid #e0ddd6;border-radius:10px;padding:16px 18px;box-shadow:0 1px 3px rgba(0,0,0,.05)}
+.card-title{font-size:14px;font-weight:600;margin-bottom:4px;color:#1a1918}
+.card-sub{font-size:12px;color:#888;margin-bottom:10px}
+.card-body{font-size:13px;color:#444;line-height:1.5}
+.card.highlight{border-left:3px solid #FF9900}
+.card.sf-card{border-left:3px solid #00A1E0}
+.card.must-card{border-left:3px solid #d73a49}
+.card.should-card{border-left:3px solid #e66200}
+.card.nice-card{border-left:3px solid #2da44e}
+/* FLOW STEPS */
+.flow{margin:16px 0 24px}
+.flow-step{display:flex;gap:12px;margin-bottom:2px;align-items:flex-start}
+.step-num{background:#1a1918;color:#FF9900;border-radius:50%;width:24px;height:24px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0;margin-top:1px}
+.step-body{flex:1;background:#fff;border:1px solid #e0ddd6;border-radius:6px;padding:10px 14px;font-size:13px;line-height:1.5}
+.step-body strong{color:#1a1918}
+.step-connector{width:24px;height:16px;display:flex;justify-content:center;flex-shrink:0}
+.step-connector::before{content:'';width:2px;background:#e0ddd6;height:100%}
+/* PILLS ROW */
+.pills{display:flex;flex-wrap:wrap;gap:6px;margin:8px 0}
+.pill{padding:3px 10px;border-radius:20px;font-size:12px;font-weight:500}
+.pill-orange{background:#fff3e0;color:#b45309;border:1px solid #fcd34d}
+.pill-blue{background:#e0f0ff;color:#0369a1;border:1px solid #bae6fd}
+.pill-purple{background:#f3f0ff;color:#6d28d9;border:1px solid #c4b5fd}
+.pill-red{background:#fff1f2;color:#be123c;border:1px solid #fecdd3}
+.pill-green{background:#f0fdf4;color:#15803d;border:1px solid #bbf7d0}
+/* CALLOUT BOXES */
+.callout{padding:14px 16px;border-radius:8px;margin:16px 0;font-size:13px;line-height:1.6}
+.callout-warn{background:#fff8e6;border-left:4px solid #FF9900}
+.callout-info{background:#e0f0ff;border-left:4px solid #0284c7}
+.callout-danger{background:#fff1f2;border-left:4px solid #e11d48}
+.callout-success{background:#f0fdf4;border-left:4px solid #16a34a}
+.callout strong{font-weight:700}
+/* PAGE HEADER */
+.page-header{background:linear-gradient(135deg,#1a1918 0%,#2d2b28 100%);padding:28px 40px;margin-bottom:0}
+.page-header h1{color:#f0ede6;margin-bottom:4px}
+.page-header .lead{color:#9a9890;margin:0}
+/* SECTION META */
+.section-meta{display:flex;gap:8px;align-items:center;margin-bottom:4px}
+/* DIVIDER */
+hr{border:none;border-top:1px solid #e8e6e0;margin:24px 0}
+/* MONO */
+.mono{font-family:'SF Mono',Consolas,monospace;font-size:12px;background:#f0ede6;padding:1px 5px;border-radius:3px}
+/* ARCH DIAGRAM */
+.arch{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;margin:20px 0}
+.arch-col{border-radius:10px;overflow:hidden}
+.arch-col-header{padding:10px 14px;font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.06em}
+.arch-col-body{padding:10px 14px;font-size:12px;line-height:1.6}
+.arch-item{padding:5px 8px;border-radius:5px;margin-bottom:4px;font-size:12px}
+.arch-sf{border:2px solid #00A1E0;background:#f7fcff}
+.arch-sf .arch-col-header{background:#00A1E0;color:#fff}
+.arch-sf .arch-item{background:#e0f4ff;color:#0369a1}
+.arch-aws{border:2px solid #FF9900;background:#fffbf0}
+.arch-aws .arch-col-header{background:#FF9900;color:#000}
+.arch-aws .arch-item{background:#fff3d0;color:#92400e}
+.arch-sccac{border:2px solid #6B4FBB;background:#faf8ff}
+.arch-sccac .arch-col-header{background:#6B4FBB;color:#fff}
+.arch-sccac .arch-item{background:#ede9ff;color:#5b21b6}
+/* CF STACKS TABLE */
+.stack-row td:first-child{font-family:'SF Mono',Consolas,monospace;font-size:11px}
+/* RESPONSIBILITY MATRIX */
+.resp-aws td:first-child{background:#fff8ec}
+.resp-sf td:first-child{background:#f0f8ff}
+/* ROADMAP */
+.roadmap{display:flex;flex-direction:column;gap:0;margin:16px 0}
+.roadmap-item{display:flex;gap:16px;align-items:flex-start;padding:14px 0;border-bottom:1px solid #e8e6e0}
+.roadmap-item:last-child{border-bottom:none}
+.roadmap-week{background:#1a1918;color:#FF9900;border-radius:6px;padding:4px 10px;font-size:11px;font-weight:700;white-space:nowrap;flex-shrink:0}
+.roadmap-content strong{display:block;font-size:13px;margin-bottom:3px}
+.roadmap-content span{font-size:12px;color:#666}
+/* LAMBDA TABLE */
+.lambda-row td:first-child{font-family:'SF Mono',Consolas,monospace;font-size:11px;white-space:nowrap}
+</style>
+</head>
+<body>
+<div class="layout">
+
+<!-- SIDEBAR -->
+<nav class="sidebar">
+  <div class="sidebar-header">
+    <div class="sidebar-logo">SCC-AC Reference</div>
+    <div class="sidebar-title">Amazon Connect + Salesforce Architecture Guide</div>
+  </div>
+  <div class="nav-section">Sections</div>
+  <a class="nav-item active" onclick="show('s1')">1 — Documentation Overview</a>
+  <a class="nav-item" onclick="show('s2')">2 — AWS Components</a>
+  <a class="nav-sub" onclick="show('s2')">Must Know (5)</a>
+  <a class="nav-sub" onclick="show('s2')">Should Know (5)</a>
+  <a class="nav-sub" onclick="show('s2')">Lambda Functions (10)</a>
+  <a class="nav-item" onclick="show('s3')">3 — End-to-End Architecture</a>
+  <a class="nav-sub" onclick="show('s3')">3-Layer Model</a>
+  <a class="nav-sub" onclick="show('s3')">Data Flows</a>
+  <a class="nav-item" onclick="show('s4')">4 — Deployment & Config</a>
+  <a class="nav-sub" onclick="show('s4')">CloudFormation Stacks</a>
+  <a class="nav-sub" onclick="show('s4')">Team Responsibilities</a>
+  <a class="nav-item" onclick="show('s5')">5 — Voice & Chat Journeys</a>
+  <a class="nav-sub" onclick="show('s5')">Inbound Chat</a>
+  <a class="nav-sub" onclick="show('s5')">Inbound Voice</a>
+  <a class="nav-sub" onclick="show('s5')">Case Routing</a>
+  <a class="nav-item" onclick="show('s6')">6 — AWS Learning Guide</a>
+  <a class="nav-sub" onclick="show('s6')">Must Know</a>
+  <a class="nav-sub" onclick="show('s6')">Should Know</a>
+  <a class="nav-sub" onclick="show('s6')">Nice to Know</a>
+  <a class="nav-item" onclick="show('s7')">7 — Final Summary</a>
+  <a class="nav-sub" onclick="show('s7')">Simple English</a>
+  <a class="nav-sub" onclick="show('s7')">Pitfalls</a>
+  <a class="nav-sub" onclick="show('s7')">Roadmap</a>
+  <div style="padding:20px 16px;margin-top:auto;border-top:1px solid #2e2d2b;font-size:11px;color:#444">
+    Based on official SCC-AC docs<br>amazon-connect.github.io
+  </div>
+</nav>
+
+<!-- CONTENT -->
+<main class="content" id="content">
+
+<!-- ─── SECTION 1: DOCUMENTATION OVERVIEW ─── -->
+<div class="section active" id="s1">
+  <div class="page-header">
+    <div class="section-meta"><span class="badge badge-sccac">SECTION 1</span></div>
+    <h1>Documentation Overview</h1>
+    <p class="lead">A complete inventory of every section in the SCC-AC documentation — what it covers and why it matters for implementation.</p>
+  </div>
+  <div style="padding:32px 40px">
+
+  <h2>What is SCC-AC?</h2>
+  <p><strong>SCC-AC (Salesforce Contact Center with Amazon Connect)</strong> is an AWS-built managed package and supporting AWS infrastructure that extends the standard Salesforce Service Cloud Voice (SCV) BYOA integration. While SCV handles voice calls natively, SCC-AC adds Amazon Connect Chat, unified routing for Cases, observability logging, post-contact AI summaries, and an AI agent assistant — all surfaced inside Salesforce's Omni-Channel and Lightning Experience.</p>
+  <p>In plain English: SCV makes phone calls work in Salesforce. SCC-AC makes everything else (chat, digital channels, cases, AI) also work via Amazon Connect, inside Salesforce.</p>
+
+  <h2>Complete Documentation Inventory</h2>
+  <div class="tbl-wrap">
+  <table>
+    <thead><tr><th>Section</th><th>Key Topics</th><th>Why It Matters</th></tr></thead>
+    <tbody>
+      <tr><td><strong>About SCC-AC</strong></td><td>Overview, notices, abstract</td><td>Scope and legal boundaries of the integration</td></tr>
+      <tr><td><strong>Release Notes</strong> (SF Package + AWS Resources)</td><td>Version history, new features, breaking changes</td><td>Critical for upgrades — breaking changes between package versions</td></tr>
+      <tr><td><strong>Key Benefits &amp; Requirements</strong></td><td>Feature list, licensing prerequisites</td><td>Confirms which SF licenses are needed (SCV + Digital Engagement)</td></tr>
+      <tr><td><strong>Prerequisites → Salesforce Org &amp; AWS Setup</strong></td><td>IAM users, IAM roles, SF user setup, Permission Sets</td><td>Must be done before any installation; IAM policy JSON is here</td></tr>
+      <tr><td><strong>Prerequisites → Contact Center Setup</strong></td><td>Creating the Amazon Connect instance via SF Setup, SAML, Connected App</td><td>This is where the actual Amazon Connect instance is provisioned</td></tr>
+      <tr><td><strong>Installation → Install SCC-AC</strong></td><td>Managed package install, Permission Set cloning, Connected App creation, Platform Cache</td><td>Step-by-step SF-side setup including critical Apex class; one wrong step breaks setup</td></tr>
+      <tr><td><strong>Installation → Guided Setup</strong></td><td>6-step wizard: Connected App key, AWS Account ID, Named Creds, IAM creds, Certificate, CloudFormation</td><td>The "glue" that connects SF org to AWS; triggers all CloudFormation deployments</td></tr>
+      <tr><td><strong>Installation → Update SCC-AC</strong></td><td>Package upgrade process, permission set comparison after upgrade</td><td>New package versions add objects/fields; permission sets must be manually updated</td></tr>
+      <tr><td><strong>Installation → Sandbox Refresh</strong></td><td>Complete reinstall needed after sandbox refresh</td><td>Sandbox refresh changes Org ID and My Domain — SCC-AC cannot survive this without reinstall</td></tr>
+      <tr><td><strong>SCC-AC → Messaging → Setup Messaging</strong></td><td>Messaging channel creation, Omni-Channel config, queue mapping</td><td>Core chat setup — Messaging Channel must be mapped to Connect queue</td></tr>
+      <tr><td><strong>SCC-AC → Messaging → Attachments</strong></td><td>S3 CORS configuration, file type/size limits</td><td>S3 CORS must be configured or file uploads fail with 403</td></tr>
+      <tr><td><strong>SCC-AC → Messaging → Chat Transfers</strong></td><td>Agent-to-agent and agent-to-queue transfers, Quick Connects</td><td>Transfers require additional permission sets AND Quick Connects in Amazon Connect</td></tr>
+      <tr><td><strong>SCC-AC → Messaging → CTR Import</strong></td><td>Contact Trace Records import into Salesforce</td><td>How post-contact analytics data gets into Salesforce</td></tr>
+      <tr><td><strong>SCC-AC → Messaging → Setup Routing</strong></td><td>Contact flow configuration, Omni-Queue/Omni-Flow routing, advanced overrides</td><td>How SF routing decisions influence Amazon Connect queues</td></tr>
+      <tr><td><strong>SCC-AC → Messaging → ACW</strong></td><td>After Conversation Work setup</td><td>Controls agent wrap-up time after contact ends</td></tr>
+      <tr><td><strong>SCC-AC → Messaging → Typing Indicators</strong></td><td>Agent typing indicators and read receipts</td><td>Enhanced chat UX features</td></tr>
+      <tr><td><strong>SCC-AC → Messaging → Test Omni-Channel</strong></td><td>End-to-end test procedure</td><td>Validation step to confirm everything is wired correctly</td></tr>
+      <tr><td><strong>SCC-AC → Messaging → Disconnect Flow Re-queue</strong></td><td>Using Connect Disconnect Flow with SCC-AC</td><td>Required if customizing AWS default disconnect flows</td></tr>
+      <tr><td><strong>SCC-AC → Unified Routing</strong></td><td>Routing Salesforce Cases via Amazon Connect</td><td>Enables Connect to handle non-chat work items (Cases) from Salesforce</td></tr>
+      <tr><td><strong>SCC-AC → Observability Logging</strong></td><td>CCP init logs, agent activity logs, S3 storage, Apex Future limits</td><td>Operational visibility into agent behavior; watch Apex async limits</td></tr>
+      <tr><td><strong>SCC-AC → Post-Contact Summarization</strong></td><td>AI summaries for chat and voice, Contact Lens setup, IAM permissions</td><td>Requires Contact Lens enabled in Connect AND separate IAM user for voice summaries</td></tr>
+      <tr><td><strong>SCC-AC → AI Agent Assistance (Amazon Q in Connect)</strong></td><td>Connect Assistant/Amazon Q setup, knowledge base integration, SF as data source</td><td>Real-time agent recommendations during live contacts</td></tr>
+      <tr><td><strong>Troubleshooting</strong></td><td>Diagnostic checklist, 20+ specific error patterns with causes &amp; solutions</td><td>Critical operational reference; most common issues are permission-related</td></tr>
+      <tr><td><strong>Logs, Metrics &amp; Alarms</strong></td><td>CloudWatch dashboards, Lambda alarms, SF setup logs</td><td>10 pre-built CloudWatch alarms with default thresholds</td></tr>
+      <tr><td><strong>Limitations</strong></td><td>SF messaging limits (50 sessions/sec), Apex governor limits, Connect quotas</td><td>Capacity planning reference</td></tr>
+      <tr><td><strong>FAQs</strong></td><td>(Currently empty in docs)</td><td>—</td></tr>
+      <tr><td><strong>Appendix A — IAM Credential Rotation</strong></td><td>Rotating IAM user credentials every 90 days</td><td>Security best practice; failing to rotate can cause prod outages</td></tr>
+      <tr><td><strong>Appendix B — Lambda Functions</strong></td><td>All 10 Lambda functions with descriptions and triggers</td><td>Essential for debugging and understanding the system</td></tr>
+      <tr><td><strong>Appendix B — Lambda Provisioned Concurrency</strong></td><td>Pre-warming Lambda for low latency</td><td>Performance tuning for high-volume contact centers</td></tr>
+      <tr><td><strong>Appendix B — AWS Secrets</strong></td><td>Two secrets: global org secret and per-CC access token cache</td><td>Understanding what credentials are stored where</td></tr>
+      <tr><td><strong>Appendix B — Contact Flows</strong></td><td>5 sample contact flows with required blocks and logic</td><td>Blueprint for any custom contact flow development</td></tr>
+      <tr><td><strong>Appendix C — Uninstalling SCC-AC</strong></td><td>Removal process</td><td>Important for sandbox refresh / reinstall scenarios</td></tr>
+      <tr><td><strong>Appendix D — Runtime IAM Permissions</strong></td><td>Minimum IAM permissions for runtime operations</td><td>Principle of least privilege — separate setup user from runtime user</td></tr>
+      <tr><td><strong>Appendix E — Minimum SF User Permissions</strong></td><td>Minimum SF permissions for Connected App Run-As user</td><td>Security hardening option</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <div class="callout callout-info">
+    <strong>Key insight:</strong> The documentation is split into two distinct phases: <strong>Installation</strong> (do once) and <strong>SCC-AC Features</strong> (configure per-feature). The Guided Setup section is the most critical — it triggers all AWS CloudFormation deployments and is the source of most implementation failures.
+  </div>
+
+  </div>
+</div>
+
+<!-- ─── SECTION 2: AWS COMPONENTS ─── -->
+<div class="section" id="s2">
+  <div class="page-header">
+    <div class="section-meta"><span class="badge badge-aws">SECTION 2</span></div>
+    <h1>AWS Components &amp; Concepts</h1>
+    <p class="lead">Every AWS service used by SCC-AC — what it is, why it's used, what data flows through it, and the Salesforce equivalent.</p>
+  </div>
+  <div style="padding:32px 40px">
+
+  <h2>Core AWS Services Used by SCC-AC</h2>
+
+  <h3><span class="badge badge-must">MUST KNOW</span> Amazon Connect</h3>
+  <div class="tbl-wrap">
+  <table><thead><tr><th width="140">Attribute</th><th>Detail</th></tr></thead><tbody>
+    <tr><td><strong>What it is</strong></td><td>AWS's cloud contact center platform. A fully managed service for handling inbound/outbound voice calls and chat. Think of it as the "telephony engine" living in AWS.</td></tr>
+    <tr><td><strong>Why SCC-AC uses it</strong></td><td>It IS the contact center. Amazon Connect handles the actual call/chat routing, queuing, IVR flows, and real-time communications. Salesforce is just the agent interface on top.</td></tr>
+    <tr><td><strong>When used</strong></td><td>Every single contact interaction — inbound chat, inbound voice, outbound, transfers, routing decisions.</td></tr>
+    <tr><td><strong>Data flowing through it</strong></td><td>Voice streams, chat messages, contact attributes (key-value pairs), contact IDs, queue assignments, agent state changes, Contact Trace Records (post-call metadata).</td></tr>
+    <tr><td><strong>SF Equivalent</strong></td><td>Think of it as the Salesforce Contact Center platform itself — the equivalent of what Salesforce's own telephony would be if it were a separate cloud product.</td></tr>
+    <tr><td><strong>Key sub-components</strong></td><td><span class="mono">Contact Flows</span> (routing logic), <span class="mono">Queues</span> (holding areas), <span class="mono">Routing Profiles</span> (agent capacity), <span class="mono">Security Profiles</span> (permissions), <span class="mono">CCP</span> (agent UI), <span class="mono">Contact Lens</span> (AI analytics)</td></tr>
+  </tbody></table>
+  </div>
+
+  <h3><span class="badge badge-must">MUST KNOW</span> AWS Lambda</h3>
+  <div class="tbl-wrap">
+  <table><thead><tr><th width="140">Attribute</th><th>Detail</th></tr></thead><tbody>
+    <tr><td><strong>What it is</strong></td><td>Serverless compute — you deploy code (functions) that run on-demand without managing servers. Each function runs for milliseconds to minutes and is billed per invocation. Cold starts exist but can be mitigated with Provisioned Concurrency.</td></tr>
+    <tr><td><strong>Why SCC-AC uses it</strong></td><td>Lambda is the bridge between Amazon Connect and Salesforce. When a contact flow needs to create a Salesforce record, route work, or process a CTR — it calls a Lambda function. Lambda then calls Salesforce APIs.</td></tr>
+    <tr><td><strong>When used</strong></td><td>On every inbound chat (create session + route), on every contact disconnect (end session), on CTR arrival (import data), during setup (certificate generation, secret management).</td></tr>
+    <tr><td><strong>Data flowing through it</strong></td><td>Contact IDs, channel identifiers, Salesforce session tokens, routing decisions, CTR JSON records, certificate files, API responses.</td></tr>
+    <tr><td><strong>SF Equivalent</strong></td><td>Exactly like <strong>Apex @future methods</strong> or <strong>Queueable Apex</strong> — code that runs asynchronously in response to events, calls external APIs, and processes data. The key difference: Lambda code runs in AWS, not in Salesforce.</td></tr>
+  </tbody></table>
+  </div>
+  <h4>The 10 Lambda Functions Deployed by SCC-AC</h4>
+  <div class="tbl-wrap">
+  <table class="lambda-row">
+    <thead><tr><th>Function Name</th><th>Scope</th><th>Trigger</th><th>What It Does</th></tr></thead>
+    <tbody>
+      <tr><td>SCCAC-CertificateManagementFunction-{OrgId}</td><td>Global</td><td>Guided Setup Step 5</td><td>Generates RSA key pair + self-signed cert → stores JKS file in S3</td></tr>
+      <tr><td>SCCAC-ConnectedAppManagerFunction-{OrgId}</td><td>Global</td><td>After cert import</td><td>Updates SF Connected App to replace placeholder cert with real cert</td></tr>
+      <tr><td>SCCAC-ExternalCredentialManagementFunction-{OrgId}</td><td>Global</td><td>After cert import</td><td>Updates SF External Credential with real certificate</td></tr>
+      <tr><td>SCCAC-SecretManagementFunction-{OrgId}</td><td>Global</td><td>Setup + secret replication</td><td>Creates/updates/reads Secrets Manager secrets; replicates across regions</td></tr>
+      <tr><td>SCCAC-CreateMessagingSessionFunction-{CCId}</td><td>Per-CC</td><td>Contact Flow (inbound chat)</td><td>Calls SF Interaction API → creates MessagingSession record → returns three contact attributes: <code>conversationIdentifier</code>, <code>workItemId</code>, <code>source=SCCAC</code> (the source value is how the CTR import Lambda later identifies this as an SCC-AC contact)</td></tr>
+      <tr><td>SCCAC-RoutingFunction-{CCId}</td><td>Per-CC</td><td>Contact Flow (after session created)</td><td>Calls SF API to route the MessagingSession via Omni-Channel; handles initial routing + transfers</td></tr>
+      <tr><td>SCCAC-CtrKinesisRecordSegregationFunction-{CCId}</td><td>Per-CC</td><td>Kinesis stream (CTR arrival)</td><td>Reads CTR from Kinesis stream, filters SCCAC contacts, invokes CTR import function</td></tr>
+      <tr><td>SCCAC-ContactTraceRecordFunction-{CCId}</td><td>Per-CC</td><td>Called by Kinesis segregation function</td><td>Imports CTR data into Salesforce (creates/updates records)</td></tr>
+      <tr><td>SCCAC-ContactDisconnectedFunction-{CCId}</td><td>Per-CC</td><td>Contact disconnect (trigger mechanism not specified in docs — invoked "when a contact is disconnected")</td><td>Syncs transcripts for bot-only chats (contacts that never reached a live agent, e.g. Lex bot interactions); ends MessagingSessions for those contacts on best-effort basis. Distinct from EndMessagingSessionFunction — see below.</td></tr>
+      <tr><td>SCCAC-EndMessagingSessionFunction-{CCId}</td><td>Per-CC</td><td>EventBridge (immediate) + CTR (confirmation)</td><td>Safety net: ends Salesforce MessagingSessions left open if client-side close failed</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <h3><span class="badge badge-must">MUST KNOW</span> AWS IAM (Identity &amp; Access Management)</h3>
+  <div class="tbl-wrap">
+  <table><thead><tr><th width="140">Attribute</th><th>Detail</th></tr></thead><tbody>
+    <tr><td><strong>What it is</strong></td><td>The security control layer for all of AWS. IAM defines WHO can do WHAT to WHICH resources. It has Users (humans/apps with credentials), Roles (assumed by services like Lambda), and Policies (JSON documents saying what actions are allowed/denied).</td></tr>
+    <tr><td><strong>Why SCC-AC uses it</strong></td><td>Every SCC-AC component needs permissions. Lambda functions need roles to call Connect and Secrets Manager. Salesforce needs an IAM User to call CloudFormation. Agents need an IAM Role to authenticate into Connect via SAML SSO.</td></tr>
+    <tr><td><strong>When used</strong></td><td>Constantly — every API call in AWS requires IAM authorization. Setup uses the <span class="mono">SCCAC-Setup-User</span>. Runtime uses Lambda execution roles. Agent SSO uses the <span class="mono">ProvisioningRole</span>.</td></tr>
+    <tr><td><strong>Data flowing through it</strong></td><td>Policy documents (JSON), access keys, secret keys, session tokens, SAML assertions, ARNs (Amazon Resource Names).</td></tr>
+    <tr><td><strong>SF Equivalent</strong></td><td>Think Profiles + Permission Sets + Named Credentials combined. IAM Policies = Permission Sets (JSON instead of checkboxes). IAM Roles = system users with delegated access. IAM Users = service accounts with API credentials.</td></tr>
+    <tr><td><strong>Important users created</strong></td><td><span class="mono">SCCAC-Setup-User</span> (setup + provisioning), <span class="mono">SCCAC-Runtime-User</span> (optional, for minimal runtime ops), <span class="mono">ProvisioningRole</span> (assumed by Salesforce to create Connect instance)</td></tr>
+  </tbody></table>
+  </div>
+
+  <h3><span class="badge badge-must">MUST KNOW</span> AWS CloudFormation</h3>
+  <div class="tbl-wrap">
+  <table><thead><tr><th width="140">Attribute</th><th>Detail</th></tr></thead><tbody>
+    <tr><td><strong>What it is</strong></td><td>AWS's Infrastructure-as-Code service. You define all your AWS resources (Lambda functions, S3 buckets, IAM roles, etc.) in a template (JSON/YAML), and CloudFormation creates them all in the right order, handling dependencies automatically.</td></tr>
+    <tr><td><strong>Why SCC-AC uses it</strong></td><td>SCC-AC provisions 20+ AWS resources per contact center. CloudFormation automates this so you don't have to manually create Lambda functions, IAM roles, Kinesis streams, etc. The Guided Setup wizard triggers CloudFormation deployments behind the scenes.</td></tr>
+    <tr><td><strong>When used</strong></td><td>During initial setup (6+ stack deployments), during upgrades (stack updates), during contact center enablement (per-CC stacks).</td></tr>
+    <tr><td><strong>Data flowing through it</strong></td><td>Template definitions, parameter values (Org ID, CC ID, etc.), resource configurations, IAM policies, Lambda code references.</td></tr>
+    <tr><td><strong>SF Equivalent</strong></td><td>Like the <strong>Salesforce Metadata API</strong> + <strong>Change Sets</strong> — it deploys a set of related components together, in the right order, with dependency management. But on the AWS side.</td></tr>
+  </tbody></table>
+  </div>
+
+  <h3><span class="badge badge-must">MUST KNOW</span> AWS Secrets Manager</h3>
+  <div class="tbl-wrap">
+  <table><thead><tr><th width="140">Attribute</th><th>Detail</th></tr></thead><tbody>
+    <tr><td><strong>What it is</strong></td><td>A secure vault for storing secrets (passwords, API keys, certificates) that applications can retrieve at runtime. Supports automatic rotation and encryption via KMS.</td></tr>
+    <tr><td><strong>Why SCC-AC uses it</strong></td><td>Lambda functions need to call Salesforce APIs. They need the Connected App consumer key/secret and a Salesforce access token. These are stored in Secrets Manager so Lambda can fetch them securely at runtime without hardcoding credentials.</td></tr>
+    <tr><td><strong>When used</strong></td><td>On every Lambda invocation that calls Salesforce — the Lambda fetches the cached access token from Secrets Manager, uses it, and refreshes it when expired.</td></tr>
+    <tr><td><strong>Data stored</strong></td><td>Connected App consumer key + secret, certificate public/private keys, JKS password, SF API user username, cached Salesforce OAuth access tokens.</td></tr>
+    <tr><td><strong>SF Equivalent</strong></td><td>Exactly like <strong>Named Credentials</strong> + the credential vault part of <strong>External Credentials</strong>. Instead of Salesforce storing OAuth tokens, AWS Secrets Manager stores them for Lambda to use.</td></tr>
+    <tr><td><strong>Key secrets</strong></td><td><span class="mono">SCCAC-Secret-{OrgId}</span> (org-level: certs + Connected App creds) and <span class="mono">SCCAC-InteractionApiAccessTokenSecret-{CCId}</span> (per-CC: cached SF OAuth token)</td></tr>
+  </tbody></table>
+  </div>
+
+  <hr>
+  <h2>Should Know — Supporting Services</h2>
+
+  <h3><span class="badge badge-should">SHOULD KNOW</span> Amazon S3 (Simple Storage Service)</h3>
+  <div class="tbl-wrap">
+  <table><thead><tr><th width="140">Attribute</th><th>Detail</th></tr></thead><tbody>
+    <tr><td><strong>What it is</strong></td><td>Object storage — like a giant, infinitely scalable file system in the cloud. You store files (objects) in named containers (buckets). Accessed via HTTPS with IAM-controlled permissions.</td></tr>
+    <tr><td><strong>Why SCC-AC uses it</strong></td><td>Three distinct purposes: (1) Store the generated JKS certificate file during setup for manual download. (2) Store chat attachment files when enabled. (3) Store observability logs (CCP init + agent activity) in a hierarchical structure.</td></tr>
+    <tr><td><strong>SF Equivalent</strong></td><td>Like <strong>Salesforce Files / ContentDocument</strong> — a place to store binary files accessible via URL. The key difference: S3 uses IAM for access control rather than Salesforce sharing rules.</td></tr>
+    <tr><td><strong>Key bucket</strong></td><td><span class="mono">sccac-{AWS_ACCOUNT_ID}-bucket-{SF_ORG_ID}</span> — stores certificate JKS files. CORS must be configured on the attachments bucket for chat file uploads to work from Salesforce.</td></tr>
+  </tbody></table>
+  </div>
+
+  <h3><span class="badge badge-should">SHOULD KNOW</span> Amazon CloudWatch</h3>
+  <div class="tbl-wrap">
+  <table><thead><tr><th width="140">Attribute</th><th>Detail</th></tr></thead><tbody>
+    <tr><td><strong>What it is</strong></td><td>AWS's observability service — collects logs, metrics, and events from all AWS services. You can create dashboards, set alarms, and query logs. Think of it as AWS's equivalent of Splunk/Datadog.</td></tr>
+    <tr><td><strong>Why SCC-AC uses it</strong></td><td>SCC-AC automatically provisions a CloudWatch dashboard showing Lambda health metrics, and creates 10 alarms monitoring Lambda errors and throttles for each contact center.</td></tr>
+    <tr><td><strong>When used</strong></td><td>Continuously during operation. Lambda function logs go to CloudWatch log groups automatically. Alarms fire when error/throttle thresholds are exceeded.</td></tr>
+    <tr><td><strong>SF Equivalent</strong></td><td>Like <strong>Salesforce Event Monitoring</strong> + <strong>Debug Logs</strong> + <strong>Health Check</strong> combined. CloudWatch = where you go to debug Lambda failures, just like Developer Console → Logs in Salesforce.</td></tr>
+    <tr><td><strong>Key alarms</strong></td><td>10 alarms pre-created: error alarms (≥3 errors/min) and throttle alarms (≥5 throttles/min) for: CreateMessagingSession, Routing, CtrKinesisSegregation, ContactTraceRecord, ContactDisconnected functions.</td></tr>
+  </tbody></table>
+  </div>
+
+  <h3><span class="badge badge-should">SHOULD KNOW</span> Amazon Kinesis Data Streams</h3>
+  <div class="tbl-wrap">
+  <table><thead><tr><th width="140">Attribute</th><th>Detail</th></tr></thead><tbody>
+    <tr><td><strong>What it is</strong></td><td>A real-time data streaming service. Think of it as a high-throughput message queue where data producers push records and consumers read them. Records are retained for 24h–7 days.</td></tr>
+    <tr><td><strong>Why SCC-AC uses it</strong></td><td>Amazon Connect exports Contact Trace Records (CTRs — the post-contact metadata like duration, timestamps, agent info) via a Kinesis stream. The CtrKinesisRecordSegregationFunction Lambda reads these and imports them into Salesforce.</td></tr>
+    <tr><td><strong>When used</strong></td><td>After every contact ends — Amazon Connect emits a CTR to Kinesis, Lambda picks it up and imports it to Salesforce.</td></tr>
+    <tr><td><strong>SF Equivalent</strong></td><td>Like <strong>Platform Events / Change Data Capture</strong> — an event stream where producers publish records and consumers read them asynchronously. CTRs via Kinesis = the AWS equivalent of Salesforce's CDC stream.</td></tr>
+  </tbody></table>
+  </div>
+
+  <h3><span class="badge badge-should">SHOULD KNOW</span> Amazon EventBridge</h3>
+  <div class="tbl-wrap">
+  <table><thead><tr><th width="140">Attribute</th><th>Detail</th></tr></thead><tbody>
+    <tr><td><strong>What it is</strong></td><td>A serverless event bus. AWS services publish events (e.g., "contact disconnected in Amazon Connect"), and you create rules to route matching events to targets (e.g., a Lambda function).</td></tr>
+    <tr><td><strong>Why SCC-AC uses it</strong></td><td>Amazon Connect publishes contact disconnect events to EventBridge. SCC-AC creates a rule that routes these events to the EndMessagingSessionFunction Lambda — providing an immediate signal when a contact ends, before the CTR is even emitted.</td></tr>
+    <tr><td><strong>When used</strong></td><td>Immediately when a contact disconnects (terminal disconnect: customer hang-up, system error, API stop). This is faster than waiting for the Kinesis CTR.</td></tr>
+    <tr><td><strong>SF Equivalent</strong></td><td>Like a <strong>Salesforce Trigger</strong> or <strong>Platform Event subscription</strong> — an event fires, and code runs automatically. EventBridge = the subscription mechanism that says "when THIS event happens, run THIS function."</td></tr>
+  </tbody></table>
+  </div>
+
+  <h3><span class="badge badge-should">SHOULD KNOW</span> AWS KMS (Key Management Service)</h3>
+  <div class="tbl-wrap">
+  <table><thead><tr><th width="140">Attribute</th><th>Detail</th></tr></thead><tbody>
+    <tr><td><strong>What it is</strong></td><td>Managed encryption key service. KMS generates and manages cryptographic keys used to encrypt data at rest. Other AWS services (like Secrets Manager) integrate with KMS to encrypt their stored data.</td></tr>
+    <tr><td><strong>Why SCC-AC uses it</strong></td><td>Secrets Manager uses KMS to encrypt the secrets stored (Connected App credentials, cert keys, access tokens). SCC-AC creates its own KMS keys (prefixed <span class="mono">SCC*</span>) for this purpose.</td></tr>
+    <tr><td><strong>SF Equivalent</strong></td><td>Like <strong>Salesforce Shield Platform Encryption</strong> — transparent encryption of stored sensitive data. You don't interact with KMS directly most of the time; it works under the hood.</td></tr>
+  </tbody></table>
+  </div>
+
+  <hr>
+  <h2>Nice to Know — Additional Services</h2>
+
+  <div class="card-grid">
+    <div class="card nice-card">
+      <div class="card-title">Amazon SQS</div>
+      <div class="card-sub">Simple Queue Service <span class="badge badge-nice">NICE TO KNOW</span></div>
+      <div class="card-body">Referenced in the IAM setup policy. Used as Lambda event source in CTR processing pipeline. Like Salesforce Async Apex Queue — buffers work between producers and consumers.</div>
+    </div>
+    <div class="card nice-card">
+      <div class="card-title">AWS Step Functions</div>
+      <div class="card-sub">State Machine Orchestration <span class="badge badge-nice">NICE TO KNOW</span></div>
+      <div class="card-body">Referenced in the IAM setup policy (stateMachine permissions). May be used in SCV provisioning orchestration. Like Salesforce Flow — defines a sequence of steps with branching logic.</div>
+    </div>
+    <div class="card nice-card">
+      <div class="card-title">Amazon Q in Connect</div>
+      <div class="card-sub">AI Agent Assistant <span class="badge badge-nice">NICE TO KNOW</span></div>
+      <div class="card-body">Previously "QiC." Provides real-time AI recommendations to agents during active contacts. Integrates with knowledge bases. Like Einstein for Service, but in Amazon Connect. Surfaced via utility bar in SF.</div>
+    </div>
+    <div class="card nice-card">
+      <div class="card-title">Amazon Connect Contact Lens</div>
+      <div class="card-sub">AI Speech/Chat Analytics <span class="badge badge-nice">NICE TO KNOW</span></div>
+      <div class="card-body">ML-powered analytics: real-time transcription, sentiment analysis, post-contact AI summaries. Enabled via "Set recording and analytics behavior" flow block. Required for post-contact summaries in SCC-AC.</div>
+    </div>
+    <div class="card nice-card">
+      <div class="card-title">SAML Federation / IAM Identity</div>
+      <div class="card-sub">SSO for Agents <span class="badge badge-nice">NICE TO KNOW</span></div>
+      <div class="card-body">Salesforce acts as a SAML Identity Provider. When an agent goes Available in Omni-Channel, Salesforce sends a SAML assertion to Amazon Connect, automatically logging the agent into CCP. This is how Omni-Channel status syncs with Connect.</div>
+    </div>
+  </div>
+
+  <h3>Amazon Connect Sub-Components</h3>
+  <div class="tbl-wrap">
+  <table>
+    <thead><tr><th>Sub-Component</th><th>What It Is</th><th>SF Equivalent</th></tr></thead>
+    <tbody>
+      <tr><td><strong>Contact Flows</strong></td><td>Visual drag-and-drop routing logic (IVR/bot flows). Define what happens when a contact arrives. Can invoke Lambda, set attributes, transfer to queues, play prompts.</td><td>Salesforce Omni-Channel Flows + Flow Builder (but for the telephony/chat path before it reaches an agent)</td></tr>
+      <tr><td><strong>Queues</strong></td><td>Holding areas for contacts waiting for an agent. Contacts sit in a queue until an agent with the right routing profile is available.</td><td>Salesforce Omni-Channel Queues (direct equivalent)</td></tr>
+      <tr><td><strong>Routing Profiles</strong></td><td>Per-agent capacity configuration. Defines which queues an agent handles, and with what concurrency (e.g., 2 chats + 1 voice simultaneously).</td><td>Salesforce Routing Configuration + Service Channel capacity</td></tr>
+      <tr><td><strong>Security Profiles</strong></td><td>Permission sets within Amazon Connect. Controls what an agent can see/do in the CCP (e.g., can they see real-time metrics? Make outbound calls?).</td><td>Salesforce Permission Sets</td></tr>
+      <tr><td><strong>Quick Connects</strong></td><td>Pre-configured transfer destinations. Agents use these to transfer a contact to another agent, queue, or external number. Must be enabled on queues.</td><td>Like Salesforce Transfer actions configured in Omni-Channel</td></tr>
+      <tr><td><strong>CCP (Contact Control Panel)</strong></td><td>The agent UI for Amazon Connect. In SCC-AC, it's embedded invisibly in Salesforce via an iframe. The CCP handles real-time contact state; Omni-Channel shows the work item.</td><td>The embedded softphone widget — invisible in SCC-AC (hidden iframe)</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  </div>
+</div>
+
+<!-- ─── SECTION 3: ARCHITECTURE ─── -->
+<div class="section" id="s3">
+  <div class="page-header">
+    <div class="section-meta"><span class="badge badge-sccac">SECTION 3</span></div>
+    <h1>End-to-End Architecture</h1>
+    <p class="lead">The complete three-layer architecture showing how Salesforce, SCC-AC glue components, and AWS infrastructure fit together.</p>
+  </div>
+  <div style="padding:32px 40px">
+
+  <h2>The Three-Layer Model</h2>
+  <p>SCC-AC creates a three-layer architecture. Understanding which layer each component lives in is the key to debugging and designing.</p>
+
+  <div class="arch">
+    <div class="arch-col arch-sf">
+      <div class="arch-col-header">🔷 Salesforce Layer</div>
+      <div class="arch-col-body">
+        <div style="font-weight:600;font-size:11px;margin-bottom:6px;color:#0369a1">SERVICE CLOUD</div>
+        <div class="arch-item">Service Cloud Voice (SCV)</div>
+        <div class="arch-item">Digital Engagement</div>
+        <div class="arch-item">Omni-Channel</div>
+        <div class="arch-item">Lightning App + CCP Widget</div>
+        <div style="font-weight:600;font-size:11px;margin:10px 0 6px;color:#0369a1">SCC-AC PACKAGE (awsac)</div>
+        <div class="arch-item">SCC_SetupLog__c</div>
+        <div class="arch-item">MessagingSession records</div>
+        <div class="arch-item">SCC Events (Platform Events)</div>
+        <div class="arch-item">Platform Cache (sccac)</div>
+        <div class="arch-item">Post-Contact Summary Component</div>
+        <div class="arch-item">Amazon Q Assistant Utility Bar</div>
+        <div style="font-weight:600;font-size:11px;margin:10px 0 6px;color:#0369a1">CREDENTIALS</div>
+        <div class="arch-item">Named Credentials (6+)</div>
+        <div class="arch-item">External Credentials (IAM)</div>
+        <div class="arch-item">Connected App (GLOBAL_CONNECTED_APP)</div>
+        <div class="arch-item">Certificates (JKS imported)</div>
+        <div style="font-weight:600;font-size:11px;margin:10px 0 6px;color:#0369a1">SECURITY</div>
+        <div class="arch-item">SCC Administrator Perm Set</div>
+        <div class="arch-item">SCC Agent Perm Set</div>
+        <div class="arch-item">SCV Permission Sets</div>
+      </div>
+    </div>
+    <div class="arch-col arch-sccac">
+      <div class="arch-col-header">🔶 SCC-AC Glue Layer (Lambda)</div>
+      <div class="arch-col-body">
+        <div style="font-weight:600;font-size:11px;margin-bottom:6px;color:#5b21b6">SETUP LAMBDAS (us-east-1)</div>
+        <div class="arch-item">CertificateManagement</div>
+        <div class="arch-item">ConnectedAppManager</div>
+        <div class="arch-item">ExternalCredentialManagement</div>
+        <div class="arch-item">SecretManagement</div>
+        <div style="font-weight:600;font-size:11px;margin:10px 0 6px;color:#5b21b6">RUNTIME LAMBDAS (CC region)</div>
+        <div class="arch-item">CreateMessagingSession</div>
+        <div class="arch-item">RoutingFunction</div>
+        <div class="arch-item">CtrKinesisRecordSegregation</div>
+        <div class="arch-item">ContactTraceRecord</div>
+        <div class="arch-item">ContactDisconnected</div>
+        <div class="arch-item">EndMessagingSession</div>
+        <div style="font-weight:600;font-size:11px;margin:10px 0 6px;color:#5b21b6">CREDENTIALS VAULT</div>
+        <div class="arch-item">Secrets Manager (org secret)</div>
+        <div class="arch-item">Secrets Manager (token cache)</div>
+        <div style="font-weight:600;font-size:11px;margin:10px 0 6px;color:#5b21b6">EVENT ROUTING</div>
+        <div class="arch-item">EventBridge Rule (disconnect)</div>
+        <div class="arch-item">Kinesis Stream (CTR)</div>
+      </div>
+    </div>
+    <div class="arch-col arch-aws">
+      <div class="arch-col-header">🔶 Amazon Connect Layer</div>
+      <div class="arch-col-body">
+        <div style="font-weight:600;font-size:11px;margin-bottom:6px;color:#92400e">CONTACT HANDLING</div>
+        <div class="arch-item">Amazon Connect Instance</div>
+        <div class="arch-item">Contact Flows (5 samples)</div>
+        <div class="arch-item">Queues (SCC-BasicQueue)</div>
+        <div class="arch-item">Routing Profiles</div>
+        <div class="arch-item">Security Profiles</div>
+        <div style="font-weight:600;font-size:11px;margin:10px 0 6px;color:#92400e">AI FEATURES</div>
+        <div class="arch-item">Contact Lens Analytics</div>
+        <div class="arch-item">Amazon Q in Connect</div>
+        <div class="arch-item">Post-Contact Summaries</div>
+        <div style="font-weight:600;font-size:11px;margin:10px 0 6px;color:#92400e">INFRASTRUCTURE</div>
+        <div class="arch-item">S3 Buckets (cert, logs)</div>
+        <div class="arch-item">CloudWatch (logs + alarms)</div>
+        <div class="arch-item">IAM Roles + Users</div>
+        <div class="arch-item">KMS Keys</div>
+        <div class="arch-item">CloudFormation Stacks (5)</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="callout callout-info">
+    <strong>The critical insight:</strong> SCC-AC Lambda functions are the only components that can "see" both worlds simultaneously. They hold the Salesforce OAuth token (from Secrets Manager) and call Salesforce APIs, while also being invoked by Amazon Connect contact flows. Everything else is either purely Salesforce or purely AWS.
+  </div>
+
+  <h2>Authentication Architecture</h2>
+  <p>There are three distinct authentication relationships in SCC-AC:</p>
+  <div class="tbl-wrap">
+  <table>
+    <thead><tr><th>Direction</th><th>Method</th><th>Credentials</th><th>Purpose</th></tr></thead>
+    <tbody>
+      <tr><td><strong>Salesforce → AWS</strong></td><td>AWS Signature V4 (IAM Access Key)</td><td>SCCAC-Setup-User credentials stored in SF External Credentials</td><td>Salesforce calls CloudFormation, S3, Secrets Manager during setup</td></tr>
+      <tr><td><strong>Lambda → Salesforce</strong></td><td>OAuth 2.0 Client Credentials Flow (Certificate-based)</td><td>Connected App consumer key + certificate private key stored in Secrets Manager; OAuth token cached separately. Note: <code>isClientCredentialEnabled=true</code>, <code>isNamedUserJwtEnabled=false</code> — this is Client Credentials with a certificate replacing the consumer secret, NOT JWT Bearer Flow.</td><td>Lambda functions call Salesforce Interaction API to create sessions, route work</td></tr>
+      <tr><td><strong>Agent → Amazon Connect</strong></td><td>SAML 2.0 SSO</td><td>Salesforce acts as Identity Provider; agent's SF session = Connect session</td><td>Agent logs into CCP automatically when going Available in Omni-Channel</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <h2>Contact Flows — The Brain of Routing</h2>
+  <p>Amazon Connect Contact Flows are the equivalent of Salesforce Flows but for the telephony/chat path. They execute BEFORE a contact reaches an agent. SCC-AC provisions these sample flows automatically:</p>
+  <div class="tbl-wrap">
+  <table>
+    <thead><tr><th>Flow Name</th><th>Used For</th><th>Required Blocks</th></tr></thead>
+    <tbody>
+      <tr><td><strong>SCCAC - Sample Inbound Flow - {CCId}</strong></td><td>Inbound chat contacts</td><td>Set contact attrs (channelAddressId) → Lambda (CreateSession) → Lambda (Routing) → Set working queue → Transfer to queue</td></tr>
+      <tr><td><strong>SCCAC - Sample Agent Transfer Flow</strong></td><td>Agent-to-agent transfers</td><td>Lambda (RoutingFunction, type=Transfer) → Set working queue (by agent) → Transfer to queue</td></tr>
+      <tr><td><strong>SCCAC - Sample Queue Transfer Flow</strong></td><td>Agent-to-queue transfers</td><td>Lambda (RoutingFunction, type=Transfer) → Transfer to queue</td></tr>
+      <tr><td><strong>SCCAC - Sample Transcription Subflow (Contact Lens)</strong></td><td>Enable chat analytics</td><td>Set recording and analytics behavior (Enable chat analytics)</td></tr>
+      <tr><td><strong>SCCAC - Sample Omni-Channel Subflow - Task Routing - {CCId}</strong></td><td>Unified routing (Cases)</td><td>Set working queue (using queueId attribute) → Transfer to queue</td></tr>
+      <tr><td><strong>SCCAC - Sample Inbound Flow - QiC - {CCId}</strong></td><td>Inbound chat with AI Assistant</td><td>Same as Inbound Flow + Amazon Q / Agentic AI block</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <div class="callout callout-warn">
+    <strong>⚠️ Critical:</strong> Never use the sample flows directly — they get reset on upgrades. Always use <strong>Save As</strong> to create a copy, then edit your copy. Only the copies survive SCC-AC package updates.
+  </div>
+
+  <h2>Named Credentials — The Wiring Diagram</h2>
+  <p>Named Credentials in Salesforce are the "plugs" that connect Salesforce callouts to external endpoints. SCC-AC creates these automatically during Guided Setup:</p>
+  <div class="tbl-wrap">
+  <table>
+    <thead><tr><th>Named Credential</th><th>Points To</th><th>Used For</th></tr></thead>
+    <tbody>
+      <tr><td><span class="mono">SCC_GLOBAL_CFN_NC</span></td><td>AWS CloudFormation API</td><td>SF triggering CloudFormation stack deployments</td></tr>
+      <tr><td><span class="mono">SCC_GLOBAL_CONNECT_VOICE_SERVICE_NC</span></td><td>Connect Voice Service</td><td>Voice-related operations</td></tr>
+      <tr><td><span class="mono">SCC_GLOBAL_INTERACTION_SERVICE_NC</span></td><td>Interaction Service endpoint</td><td>Salesforce Apex callouts to the Connect interaction/conversation service. Note: Lambda does NOT use SF Named Credentials — Lambda reads credentials from Secrets Manager directly. Named Credentials are only used by Salesforce-side Apex callouts. The exact target endpoint is not specified in the documentation.</td></tr>
+      <tr><td><span class="mono">SCC_GLOBAL_S3_CALL_NC</span></td><td>AWS S3</td><td>Certificate file operations</td></tr>
+      <tr><td><span class="mono">SCC_CONTACT_CENTER_CFN_NC_{CCId}</span></td><td>CloudFormation (per-CC)</td><td>Per-contact-center CloudFormation operations</td></tr>
+      <tr><td><span class="mono">SCC_CONTACT_CENTER_CONNECT_API_NC_{CCId}</span></td><td>Amazon Connect API</td><td>StopContact, StartTaskContact operations from SF</td></tr>
+      <tr><td><span class="mono">SCC_CONTACT_CENTER_CONTACTLENS_API_NC_{CCId}</span></td><td>Connect Contact Lens API</td><td>Retrieving voice call AI summaries</td></tr>
+      <tr><td><span class="mono">SCC_CONTACT_CENTER_S3_LOGGING_NC</span></td><td>AWS S3 (logging bucket)</td><td>Uploading observability logs from Salesforce</td></tr>
+    </tbody>
+  </table>
+  </div>
+  <div class="callout callout-danger">
+    <strong>Common Pitfall:</strong> All Named Credentials must have "Enable for Callouts" toggled ON manually after creation. This is a 4-click step per credential and is one of the most commonly missed setup steps.
+  </div>
+
+  </div>
+</div>
+
+<!-- ─── SECTION 4: DEPLOYMENT ─── -->
+<div class="section" id="s4">
+  <div class="page-header">
+    <div class="section-meta"><span class="badge badge-sccac">SECTION 4</span></div>
+    <h1>Deployment &amp; Configuration</h1>
+    <p class="lead">What CloudFormation creates, what must be done manually, and who owns each step.</p>
+  </div>
+  <div style="padding:32px 40px">
+
+  <h2>CloudFormation Stacks Created During Guided Setup</h2>
+  <div class="tbl-wrap">
+  <table class="stack-row">
+    <thead><tr><th>Stack Name</th><th>Region</th><th>Triggered By</th><th>Creates</th></tr></thead>
+    <tbody>
+      <tr><td>SCC-GLOBAL-STACK-{OrgId}</td><td>us-east-1</td><td>Guided Setup Step 4 (Enter IAM Creds)</td><td>4 setup Lambda functions, IAM roles, S3 bucket, Secrets Manager secret (with placeholder values), KMS key</td></tr>
+      <tr><td>SCC-GLOBAL-CERTIFICATE-STACK-{Timestamp}</td><td>us-east-1</td><td>Guided Setup Step 5 (Generate Certificate)</td><td>Invokes CertificateManagementFunction → generates RSA cert → stores JKS in S3</td></tr>
+      <tr><td>SCC-GLOBAL-CERTIFICATE-APPLIED-RESOURCE-STACK-{OrgId}-{Timestamp}</td><td>us-east-1</td><td>Guided Setup Step 6 (Enter Certificate Label)</td><td>Invokes ConnectedAppManagerFunction + ExternalCredentialManagementFunction → updates SF Connected App and External Credential with real cert</td></tr>
+      <tr><td>SCC-CONTACT-CENTER-STACK-{CCId}</td><td>CC region (e.g. us-east-1)</td><td>Contact Center Setup Step 3</td><td>6 runtime Lambda functions, Kinesis stream, EventBridge rule, CloudWatch dashboard, 10 CloudWatch alarms, IAM roles, KMS key for CC, SQS queue, Contact Flows in Amazon Connect</td></tr>
+      <tr><td>SCC-CONTACT-CENTER-SECRET-REPLICATION-STACK-{CCId}</td><td>CC region</td><td>Same as above</td><td>Replicates SCCAC-Secret from us-east-1 to the CC region so runtime Lambdas (in CC region) can access it</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <h2>What Must Be Done Manually (Not Automated)</h2>
+  <div class="tbl-wrap">
+  <table>
+    <thead><tr><th>Manual Step</th><th>Where</th><th>Why Not Automated</th></tr></thead>
+    <tbody>
+      <tr><td>Download JKS certificate from S3 and upload to SF Certificate &amp; Key Management</td><td>AWS Console → S3; Salesforce Setup</td><td>Cross-cloud file transfer with password input cannot be automated</td></tr>
+      <tr><td>Enable "Enable for Callouts" on each Named Credential</td><td>Salesforce Setup → Named Credentials</td><td>Salesforce security model requires manual UI confirmation</td></tr>
+      <tr><td>Update SCCAC-Secret in Secrets Manager with real consumer secret + cert password</td><td>AWS Console → Secrets Manager</td><td>Consumer secret is only available after Connected App creation in SF</td></tr>
+      <tr><td>Clone SCC Administrator Placeholder + SCC Agent Placeholder permission sets</td><td>Salesforce Setup → Permission Sets</td><td>Package cannot ship production permission sets; cloning is by design</td></tr>
+      <tr><td>Run Apex anonymous code to create Connected App + Certificate</td><td>Salesforce Developer Console</td><td>Cannot be done via managed package installer</td></tr>
+      <tr><td>Enable Identity Provider in Salesforce</td><td>Salesforce Setup → Identity Provider</td><td>Org-level setting requiring admin decision</td></tr>
+      <tr><td>Configure contact flow with channelAddressIdentifier value</td><td>Amazon Connect → Flows</td><td>Value is only known after creating the messaging channel in SF</td></tr>
+      <tr><td>Save As (clone) sample contact flows before editing</td><td>Amazon Connect → Flows</td><td>Process best practice — cannot be enforced by automation</td></tr>
+      <tr><td>Add users to Contact Center in both SF and Amazon Connect</td><td>SF: Partner Telephony Contact Centers; AWS: Connect Console</td><td>User management spans two systems</td></tr>
+      <tr><td>Enable flow logs in Amazon Connect</td><td>Amazon Connect Console → Flows</td><td>Instance-level setting</td></tr>
+      <tr><td>Configure Omni-Channel Presence Statuses, Routing Configs, Queues</td><td>Salesforce Setup</td><td>Business-specific configuration</td></tr>
+      <tr><td>Map Salesforce Queues to Amazon Connect Queues</td><td>SF: Partner Telephony Contact Centers → Queue Mapping</td><td>Business-specific routing decision</td></tr>
+      <tr><td>Update permission sets after every package upgrade</td><td>Salesforce Setup</td><td>New fields added in upgrades need explicit permission grants</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <h2>Team Responsibilities Matrix</h2>
+  <div class="tbl-wrap">
+  <table>
+    <thead><tr><th>Activity</th><th>AWS Team</th><th>Salesforce Team</th></tr></thead>
+    <tbody>
+      <tr class="resp-sf"><td><strong>SF Permission Sets &amp; User Setup</strong></td><td>—</td><td>✅ Create users, assign Contact Center Admin/Agent perm sets, SCC Admin/Agent perm sets</td></tr>
+      <tr class="resp-aws"><td><strong>AWS Account &amp; IAM Setup</strong></td><td>✅ Create AWS account, create ProvisioningRole, create SCCAC-Setup-User + policy</td><td>Provide AWS Account ID to SF team</td></tr>
+      <tr class="resp-sf"><td><strong>Amazon Connect Instance Creation</strong></td><td>Receives the created instance</td><td>✅ Triggered from Salesforce Partner Telephony Setup → creates Connect instance via ProvisioningRole</td></tr>
+      <tr class="resp-sf"><td><strong>SF Package Installation</strong></td><td>—</td><td>✅ Install from AppExchange, clone perm sets, run Apex code, create Connected App</td></tr>
+      <tr class="resp-sf"><td><strong>Guided Setup Wizard</strong></td><td>Monitor CloudFormation deployment progress</td><td>✅ Run all 6 steps of Guided Setup; retrieve artifacts from AWS between steps</td></tr>
+      <tr class="resp-aws"><td><strong>Secrets Manager Configuration</strong></td><td>✅ Update placeholder values in SCCAC-Secret with real consumer secret + cert password</td><td>Provide consumer secret from Connected App</td></tr>
+      <tr class="resp-aws"><td><strong>Contact Flow Configuration</strong></td><td>✅ Clone sample flows, configure channelAddressIdentifier, update routing profiles</td><td>Provide channelAddressIdentifier from Messaging Channel</td></tr>
+      <tr class="resp-sf"><td><strong>Omni-Channel Configuration</strong></td><td>—</td><td>✅ Routing configs, presence statuses, queues, queue mappings</td></tr>
+      <tr class="resp-aws"><td><strong>CloudWatch Alarms / Monitoring</strong></td><td>✅ Add alarm actions (SNS topics for email/paging) to pre-provisioned alarms</td><td>—</td></tr>
+      <tr class="resp-sf"><td><strong>Package Upgrades</strong></td><td>Monitor AWS stack updates</td><td>✅ Upgrade managed package, update cloned permission sets, re-test</td></tr>
+      <tr class="resp-aws"><td><strong>IAM Credential Rotation (90 days)</strong></td><td>✅ Generate new access key for SCCAC-Setup-User</td><td>✅ Update External Credentials in SF with new key/secret</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <h2>Complete Setup Sequence (In Order)</h2>
+  <div class="flow">
+    <div class="flow-step"><div class="step-num">1</div><div class="step-body"><strong>[AWS Team]</strong> Create AWS account, create <span class="mono">ProvisioningRole</span> with SCV provisioning policy, create <span class="mono">SCCAC-Setup-User</span> with the large IAM policy JSON</div></div>
+    <div class="flow-step"><div class="step-num">2</div><div class="step-body"><strong>[SF Team]</strong> Create SF org users, enable Omni-Channel, enable SCV, assign perm sets (Contact Center Admin/Agent + Partner Telephony)</div></div>
+    <div class="flow-step"><div class="step-num">3</div><div class="step-body"><strong>[SF Team]</strong> Enable Identity Provider in SF Setup → go to Partner Telephony → create new contact center (selects Amazon Connect, enters ProvisioningRole ARN) → wait 5-10 min for Connect instance creation + CloudFormation stacks in AWS</div></div>
+    <div class="flow-step"><div class="step-num">4</div><div class="step-body"><strong>[SF Team]</strong> Install SCC-AC managed package from AppExchange (Partner Telephony Setup → Step 6), clone placeholder permission sets, run Apex anonymous code to create Connected App, note consumer key + secret</div></div>
+    <div class="flow-step"><div class="step-num">5</div><div class="step-body"><strong>[SF Team]</strong> Run Guided Setup: (a) Enter Connected App consumer key → (b) Enter AWS Account ID → (c) Enable callouts for global Named Credentials → (d) Enter SCCAC-Setup-User IAM credentials → wait for SCC-GLOBAL-STACK CloudFormation</div></div>
+    <div class="flow-step"><div class="step-num">6</div><div class="step-body"><strong>[AWS Team]</strong> Update <span class="mono">SCCAC-Secret-{OrgId}</span> in Secrets Manager: replace CONNECTED_APP_CONSUMER_SECRET_PLACE_HOLDER with real consumer secret, set CERTIFICATE_KEY_PASSWORD</div></div>
+    <div class="flow-step"><div class="step-num">7</div><div class="step-body"><strong>[SF Team]</strong> Guided Setup Step 5: Generate Certificate → wait for CloudFormation → download JKS from S3 → upload to SF Certificate and Key Management</div></div>
+    <div class="flow-step"><div class="step-num">8</div><div class="step-body"><strong>[SF Team]</strong> Guided Setup Step 6: Enter certificate label → wait for CloudFormation (applies cert to Connected App)</div></div>
+    <div class="flow-step"><div class="step-num">9</div><div class="step-body"><strong>[SF Team]</strong> Enable Contact Center → enable callouts for per-CC Named Credentials → enter IAM creds again → wait for SCC-CONTACT-CENTER-STACK CloudFormation</div></div>
+    <div class="flow-step"><div class="step-num">10</div><div class="step-body"><strong>[SF Team]</strong> Create Messaging Channel, configure Omni-Channel (presence statuses, routing config, queues), map SF queue to Connect queue</div></div>
+    <div class="flow-step"><div class="step-num">11</div><div class="step-body"><strong>[AWS Team]</strong> Clone sample inbound contact flow → configure channelAddressIdentifier attribute → update Basic Routing Profile to use SCC-BasicQueue → publish flow</div></div>
+    <div class="flow-step"><div class="step-num">12</div><div class="step-body"><strong>[Both Teams]</strong> Test end-to-end: agent goes Available in Omni-Channel → verify CCP shows "Available" → send test chat → accept in Omni-Channel → verify MessagingSession record created in SF</div></div>
+  </div>
+
+  </div>
+</div>
+
+<!-- ─── SECTION 5: JOURNEYS ─── -->
+<div class="section" id="s5">
+  <div class="page-header">
+    <div class="section-meta"><span class="badge badge-sccac">SECTION 5</span></div>
+    <h1>Voice &amp; Chat Journeys</h1>
+    <p class="lead">Step-by-step flows showing exactly which AWS and Salesforce components participate at each stage.</p>
+  </div>
+  <div style="padding:32px 40px">
+
+  <h2>Journey 1 — Inbound Chat (The Core SCC-AC Flow)</h2>
+  <p>This is the primary SCC-AC use case. A customer initiates a chat and it flows through Amazon Connect → Lambda → Salesforce Omni-Channel.</p>
+
+  <div class="flow">
+    <div class="flow-step"><div class="step-num">1</div><div class="step-body"><strong>[Customer]</strong> Opens chat widget (web/mobile). Client calls <span class="mono">StartChatContact</span> Amazon Connect API. Optional: passes <span class="mono">clientId</span> attribute for customer identity linking.<br><span style="color:#888;font-size:12px">AWS components: Amazon Connect Chat API</span></div></div>
+    <div class="flow-step"><div class="step-num">2</div><div class="step-body"><strong>[Amazon Connect]</strong> Contact arrives and is processed by the <strong>SCCAC - Sample Inbound Flow</strong> contact flow. The flow begins executing step by step.<br><span style="color:#888;font-size:12px">AWS components: Amazon Connect Contact Flow engine</span></div></div>
+    <div class="flow-step"><div class="step-num">3</div><div class="step-body"><strong>[Contact Flow Block: Set Contact Attributes]</strong> Sets <span class="mono">channelAddressIdentifier</span> (the SF Messaging Channel ID) and optionally <span class="mono">EndMessagingSessionOnContactTermination=true</span>.<br><span style="color:#888;font-size:12px">Data: channelAddressId string, contact attributes map</span></div></div>
+    <div class="flow-step"><div class="step-num">4</div><div class="step-body"><strong>[Contact Flow Block: Invoke Lambda]</strong> Calls <strong>SCCAC-CreateMessagingSessionFunction</strong>. Lambda reads channelAddressIdentifier from contact attributes, retrieves SF OAuth token from Secrets Manager, calls Salesforce Interaction Service API.<br><span style="color:#888;font-size:12px">AWS components: Lambda, Secrets Manager. Data: contactId, channelAddressId → SF API call → returns three contact attributes: <code>conversationIdentifier</code>, <code>workItemId</code>, <code>source=SCCAC</code></span></div></div>
+    <div class="flow-step"><div class="step-num">5</div><div class="step-body"><strong>[Salesforce]</strong> A new <strong>MessagingSession</strong> record is created representing this chat contact. It appears as a work item pending routing in Omni-Channel.<br><span style="color:#888;font-size:12px">SF components: Interaction Service API, MessagingSession object, Digital Engagement</span></div></div>
+    <div class="flow-step"><div class="step-num">6</div><div class="step-body"><strong>[Contact Flow Block: Invoke Lambda]</strong> Calls <strong>SCCAC-RoutingFunction</strong> with <span class="mono">routingType=Initial</span>. Lambda calls SF API to trigger Omni-Channel routing on the MessagingSession. Returns <span class="mono">externalQueueId</span> = ARN of the mapped Amazon Connect queue.<br><span style="color:#888;font-size:12px">AWS components: Lambda. SF components: Omni-Channel routing engine</span></div></div>
+    <div class="flow-step"><div class="step-num">7</div><div class="step-body"><strong>[Contact Flow Block: Set Working Queue]</strong> Sets the Amazon Connect queue dynamically using the <span class="mono">externalQueueId</span> returned by the routing Lambda.<br><span style="color:#888;font-size:12px">AWS components: Amazon Connect queues (e.g. SCC-BasicQueue)</span></div></div>
+    <div class="flow-step"><div class="step-num">8</div><div class="step-body"><strong>[Contact Flow Block: Transfer to Queue]</strong> Contact enters the queue. Amazon Connect looks for an available agent with the right Routing Profile who covers this queue.<br><span style="color:#888;font-size:12px">AWS components: Amazon Connect queue engine, routing profiles</span></div></div>
+    <div class="flow-step"><div class="step-num">9</div><div class="step-body"><strong>[Salesforce]</strong> Omni-Channel detects agent is available (agent has Active status with Messaging channel). Presents the MessagingSession work item to the agent.<br><span style="color:#888;font-size:12px">SF components: Omni-Channel, agent's Lightning App</span></div></div>
+    <div class="flow-step"><div class="step-num">10</div><div class="step-body"><strong>[Agent]</strong> Accepts the work item in Omni-Channel. MessagingSession status changes to Active. The Enhanced Conversation widget in the Lightning page shows the chat transcript.<br><span style="color:#888;font-size:12px">SF components: Omni-Channel, MessagingSession record, Enhanced Conversation widget</span></div></div>
+    <div class="flow-step"><div class="step-num">11</div><div class="step-body"><strong>[Live Chat]</strong> Customer and agent exchange messages. Messages flow via Amazon Connect Chat API ↔ Salesforce Digital Engagement ↔ MessagingSession in real time.<br><span style="color:#888;font-size:12px">AWS components: Amazon Connect Chat streaming. SF components: Digital Engagement</span></div></div>
+    <div class="flow-step"><div class="step-num">12</div><div class="step-body"><strong>[Contact Ends]</strong> Agent or customer ends the chat. Two parallel cleanup processes begin immediately.<br><span style="color:#888;font-size:12px">Triggers: EventBridge contact disconnect event + Kinesis CTR emission</span></div></div>
+    <div class="flow-step"><div class="step-num">13</div><div class="step-body"><strong>[EventBridge → Lambda]</strong> Amazon Connect fires contact disconnect event → EventBridge routes to <strong>SCCAC-EndMessagingSessionFunction</strong>. This is the safety net — ensures MessagingSession is Ended in SF even if client-side close failed.<br><span style="color:#888;font-size:12px">AWS components: EventBridge, Lambda. SF components: MessagingSession API</span></div></div>
+    <div class="flow-step"><div class="step-num">14</div><div class="step-body"><strong>[Kinesis → Lambda → Salesforce]</strong> Amazon Connect emits Contact Trace Record (CTR) to Kinesis stream. <strong>CtrKinesisRecordSegregationFunction</strong> reads it, filters SCCAC contacts (source=SCCAC), invokes <strong>ContactTraceRecordFunction</strong> which imports CTR data into Salesforce.<br><span style="color:#888;font-size:12px">AWS components: Kinesis, 2 Lambda functions. SF components: CTR object</span></div></div>
+    <div class="flow-step"><div class="step-num">15</div><div class="step-body"><strong>[Optional: Post-Contact Summary]</strong> If Contact Lens enabled, an AI summary is generated. SF Apex Queueable job calls <span class="mono">SCCAC-ContactTraceRecordFunction</span> via ConnectLens API Named Credential, stores summary in MessagingSession <span class="mono">PostContactSummary__c</span> field.<br><span style="color:#888;font-size:12px">AWS components: Contact Lens API. SF components: Queueable Apex, MessagingSession</span></div></div>
+  </div>
+
+  <hr>
+  <h2>Journey 2 — Inbound Voice Call (SCV + SCC-AC)</h2>
+  <p>Voice is primarily handled by Service Cloud Voice (SCV), not SCC-AC. SCC-AC adds post-contact summaries and AI assistance on top.</p>
+
+  <div class="flow">
+    <div class="flow-step"><div class="step-num">1</div><div class="step-body"><strong>[Customer]</strong> Dials a phone number claimed in Amazon Connect and mapped to a SCV inbound contact flow.</div></div>
+    <div class="flow-step"><div class="step-num">2</div><div class="step-body"><strong>[Amazon Connect]</strong> SCV Inbound Contact Flow executes. Flow may include IVR prompts, bot interactions, Contact Lens analytics block, and Amazon Q AI block. Routes to a queue.</div></div>
+    <div class="flow-step"><div class="step-num">3</div><div class="step-body"><strong>[Omni-Channel + SSO]</strong> Agent is available in Omni-Channel with Voice channel enabled. Salesforce SSO has already logged agent into CCP via SAML. Amazon Connect routes call to agent.</div></div>
+    <div class="flow-step"><div class="step-num">4</div><div class="step-body"><strong>[Agent]</strong> CCP (hidden iframe in SF) rings → agent accepts in Omni-Channel. SCV automatically creates a <strong>VoiceCall</strong> record in Salesforce. Screen pop opens automatically.</div></div>
+    <div class="flow-step"><div class="step-num">5</div><div class="step-body"><strong>[Live Call]</strong> Voice streams directly between customer ↔ Amazon Connect ↔ agent's CCP. If Amazon Q in Connect is configured, AI recommendations appear in the Assistant utility bar in real time.</div></div>
+    <div class="flow-step"><div class="step-num">6</div><div class="step-body"><strong>[Call Ends]</strong> Agent wraps up. VoiceCall record updated by SCV. If Contact Lens + SCC-AC post-contact summary enabled: SF Apex Queueable calls Connect ContactLens API via Named Credential, stores AI summary in VoiceCall record.</div></div>
+  </div>
+
+  <div class="callout callout-info">
+    <strong>Key distinction:</strong> For voice, SCV handles everything from call routing to VoiceCall record creation. SCC-AC only adds the AI summary feature on top of voice. For chat, SCC-AC handles everything (session creation, routing, CTR import).
+  </div>
+
+  <hr>
+  <h2>Journey 3 — Case Routing (Unified Routing)</h2>
+  <p>This is the "extend Salesforce Omni-Channel to Amazon Connect" feature — Cases can be routed to Amazon Connect agents, not just chat/voice contacts.</p>
+
+  <div class="flow">
+    <div class="flow-step"><div class="step-num">1</div><div class="step-body"><strong>[Salesforce]</strong> A Case is created/updated and assigned to an Omni-Channel Queue that is: (a) configured with External Routing model and (b) mapped to an Amazon Connect queue in Partner Telephony Contact Centers.</div></div>
+    <div class="flow-step"><div class="step-num">2</div><div class="step-body"><strong>[SCC-AC Package]</strong> Detects the queue assignment via a trigger/event. Calls the Connect API Named Credential to invoke <span class="mono">connect:StartTaskContact</span> in Amazon Connect — creating a "Task" type contact.</div></div>
+    <div class="flow-step"><div class="step-num">3</div><div class="step-body"><strong>[Amazon Connect]</strong> Task contact arrives and is processed by <strong>SCCAC - Sample Omni-Channel Subflow - Task Routing</strong>. Task carries contact attributes: <span class="mono">workItemId</span> (Case ID), <span class="mono">queueId</span> (mapped Connect queue ARN), <span class="mono">externalRouting=true</span>.</div></div>
+    <div class="flow-step"><div class="step-num">4</div><div class="step-body"><strong>[Contact Flow]</strong> Sets working queue from <span class="mono">queueId</span> attribute (or manually configured fallback) → Transfers to queue. Amazon Connect routes the Task to an available agent.</div></div>
+    <div class="flow-step"><div class="step-num">5</div><div class="step-body"><strong>[Salesforce]</strong> Amazon Connect delivers work to agent → Omni-Channel presents the Case to the agent for acceptance. Agent sees the Case record, not a generic task.</div></div>
+    <div class="flow-step"><div class="step-num">6</div><div class="step-body"><strong>[Agent]</strong> Accepts Case in Omni-Channel. Works the Case normally in Salesforce. When done, closes/updates Case as usual.</div></div>
+  </div>
+
+  <hr>
+  <h2>Journey 4 — Agent Login / Status Sync (SSO Flow)</h2>
+  <div class="flow">
+    <div class="flow-step"><div class="step-num">1</div><div class="step-body"><strong>[Agent]</strong> Logs into Salesforce normally.</div></div>
+    <div class="flow-step"><div class="step-num">2</div><div class="step-body"><strong>[Agent]</strong> Opens the Lightning App with SCC-AC. The Amazon Connect CCP utility item starts automatically in a hidden iframe.</div></div>
+    <div class="flow-step"><div class="step-num">3</div><div class="step-body"><strong>[Salesforce SAML SSO]</strong> The CCP loads and requests a SAML login from Salesforce. Salesforce (as SAML Identity Provider) generates a SAML assertion for this agent and sends it to Amazon Connect's SAML endpoint.</div></div>
+    <div class="flow-step"><div class="step-num">4</div><div class="step-body"><strong>[Amazon Connect]</strong> Validates the SAML assertion, identifies the agent, and logs them into the CCP. The CCP iframe is now authenticated.</div></div>
+    <div class="flow-step"><div class="step-num">5</div><div class="step-body"><strong>[Agent]</strong> Opens Omni-Channel in the utility bar, selects "Active" presence status.</div></div>
+    <div class="flow-step"><div class="step-num">6</div><div class="step-body"><strong>[SCC-AC Package]</strong> Detects Omni-Channel status change → syncs status to Amazon Connect CCP via the hidden iframe. Agent now shows as Available in both systems simultaneously.</div></div>
+    <div class="flow-step"><div class="step-num">7</div><div class="step-body"><strong>[Result]</strong> "Amazon Connect for Salesforce - Available" appears in the utility bar, confirming successful sync.</div></div>
+  </div>
+
+  </div>
+</div>
+
+<!-- ─── SECTION 6: LEARNING GUIDE ─── -->
+<div class="section" id="s6">
+  <div class="page-header">
+    <div class="section-meta"><span class="badge badge-must">SECTION 6</span></div>
+    <h1>AWS Learning Guide for Salesforce Architects</h1>
+    <p class="lead">Every AWS concept ranked by importance, explained through Salesforce analogies. No AWS experience assumed.</p>
+  </div>
+  <div style="padding:32px 40px">
+
+  <div class="callout callout-info">
+    <strong>Your mental model:</strong> Everything you know about Salesforce has an AWS equivalent. Apex = Lambda. Metadata API/Change Sets = CloudFormation. Named Credentials = Secrets Manager + IAM. Platform Events/CDC = Kinesis + EventBridge. Permission Sets = IAM Policies. Debug Logs = CloudWatch Logs.
+  </div>
+
+  <h2><span class="badge badge-must">MUST KNOW</span> — Learn Before Implementation</h2>
+
+  <div class="card-grid">
+    <div class="card must-card">
+      <div class="card-title">1. IAM — Identity &amp; Access Management</div>
+      <div class="card-sub">The AWS Permission System</div>
+      <div class="card-body">
+        <strong>SF Analogy:</strong> Profiles + Permission Sets + Named Credential authentication, but as JSON policies instead of checkbox UIs.<br><br>
+        <strong>Key concepts:</strong> Users (humans/apps with long-lived creds), Roles (assumed by services — Lambda assumes a role), Policies (JSON: Effect/Action/Resource), ARNs (unique resource names like salesforce.com org IDs).<br><br>
+        <strong>Why critical:</strong> Every SCC-AC failure that isn't a network issue is an IAM permissions issue. You will spend 30% of setup time on IAM. Know what an access key/secret key pair is, what a policy JSON looks like, and what "AssumeRole" means.
+      </div>
+    </div>
+    <div class="card must-card">
+      <div class="card-title">2. AWS Lambda</div>
+      <div class="card-sub">Serverless Functions = Apex in the Cloud</div>
+      <div class="card-body">
+        <strong>SF Analogy:</strong> Exactly like Apex @future or Queueable Apex — code that runs asynchronously in response to events, with no server to manage.<br><br>
+        <strong>Key concepts:</strong> Functions are deployed as code packages. They have execution roles (IAM). They have timeout limits. Cold starts (first invocation is slower). Provisioned Concurrency pre-warms functions. Logs go to CloudWatch automatically.<br><br>
+        <strong>Why critical:</strong> 10 Lambda functions ARE SCC-AC's backend. When chat routing fails, you look at Lambda logs in CloudWatch.
+      </div>
+    </div>
+    <div class="card must-card">
+      <div class="card-title">3. Amazon Connect</div>
+      <div class="card-sub">The Contact Center Engine</div>
+      <div class="card-body">
+        <strong>SF Analogy:</strong> Think of it as the underlying telephony platform — like if Salesforce Contact Center were a separate cloud product that you configure independently.<br><br>
+        <strong>Key concepts:</strong> Instances (one per org), Contact Flows (the IVR/routing logic — like Flow Builder but for contacts), Queues (holding areas), Routing Profiles (per-agent capacity), Security Profiles (permissions in Connect), CCP (the agent UI), Quick Connects (pre-set transfer destinations).<br><br>
+        <strong>Why critical:</strong> All chat and voice routing happens in Connect. You will regularly visit the Connect console to edit flows, check agent states, and debug routing issues.
+      </div>
+    </div>
+    <div class="card must-card">
+      <div class="card-title">4. CloudFormation</div>
+      <div class="card-sub">Infrastructure as Code = Metadata API</div>
+      <div class="card-body">
+        <strong>SF Analogy:</strong> Like Metadata API + Change Sets. You define what you want (in a template) and CloudFormation creates/updates/deletes it. Stacks = Change Sets. Template = Metadata XML. Stack Events = Deployment Status.<br><br>
+        <strong>Key concepts:</strong> Stacks (a group of resources deployed together), Templates (JSON/YAML definitions), Stack Events (deployment log — check here when setup fails), Rollback (if any resource fails, the whole stack rolls back).<br><br>
+        <strong>Why critical:</strong> When Guided Setup fails, you look at the CloudFormation stack's Events tab. Learn to read stack events to identify which resource failed and why.
+      </div>
+    </div>
+    <div class="card must-card">
+      <div class="card-title">5. Secrets Manager</div>
+      <div class="card-sub">Credential Vault = Named Credentials</div>
+      <div class="card-body">
+        <strong>SF Analogy:</strong> Like Named Credentials, but on the AWS side. Lambda functions fetch credentials from here at runtime rather than having them hardcoded.<br><br>
+        <strong>Key concepts:</strong> Secrets are key-value JSON documents. Retrieve Secret Value (the one manual step after CloudFormation). Secret ARNs for cross-service references. Rotation (AWS recommends every 90 days — this is in the Appendix).<br><br>
+        <strong>Why critical:</strong> The most common setup failure is forgetting to update the Secrets Manager secret with real values (replacing placeholders with the consumer secret and cert password).
+      </div>
+    </div>
+  </div>
+
+  <h2><span class="badge badge-should">SHOULD KNOW</span> — Learn During Implementation</h2>
+
+  <div class="card-grid">
+    <div class="card should-card">
+      <div class="card-title">6. Amazon S3</div>
+      <div class="card-sub">Object Storage = Salesforce Files</div>
+      <div class="card-body">
+        <strong>SF Analogy:</strong> Like ContentDocument/ContentVersion — files stored and accessible via URL. But S3 is accessed via HTTP and controlled via IAM policies (not sharing rules).<br><br>
+        <strong>Must know for SCC-AC:</strong> How to navigate to a bucket, find a file, and download it (needed for certificate download). How to configure CORS rules (needed for chat attachments). Bucket naming conventions are important — SCC-AC looks for buckets by prefix.
+      </div>
+    </div>
+    <div class="card should-card">
+      <div class="card-title">7. CloudWatch</div>
+      <div class="card-sub">Monitoring + Logs = Event Monitoring + Debug Logs</div>
+      <div class="card-body">
+        <strong>SF Analogy:</strong> Event Monitoring + Debug Logs + Health Check rolled into one. Lambda errors go here. Contact flow logs go here. CloudWatch alarms = workflow rules that email you when thresholds are breached.<br><br>
+        <strong>Must know for SCC-AC:</strong> How to navigate to a Log Group (e.g., <span class="mono">/aws/lambda/SCCAC-CreateMessagingSessionFunction-{CCId}</span>), search log entries, and read Lambda execution logs. This is your primary debugging tool.
+      </div>
+    </div>
+    <div class="card should-card">
+      <div class="card-title">8. Amazon Kinesis</div>
+      <div class="card-sub">Real-time Streaming = Platform Events / CDC</div>
+      <div class="card-body">
+        <strong>SF Analogy:</strong> Like Platform Events or Change Data Capture — a stream where producers publish records and consumers read them asynchronously.<br><br>
+        <strong>For SCC-AC:</strong> Amazon Connect publishes CTRs (Contact Trace Records) to a Kinesis stream. Lambda consumes these. You don't configure Kinesis directly — it's set up by CloudFormation. But knowing it exists explains why CTR data has a slight delay (usually seconds) before appearing in Salesforce.
+      </div>
+    </div>
+    <div class="card should-card">
+      <div class="card-title">9. Amazon EventBridge</div>
+      <div class="card-sub">Event Bus = Platform Event Subscriptions</div>
+      <div class="card-body">
+        <strong>SF Analogy:</strong> Like a Platform Event trigger — "when THIS event fires, call THIS function." EventBridge rules are the subscription mechanism.<br><br>
+        <strong>For SCC-AC:</strong> A rule routes Amazon Connect contact disconnect events to the EndMessagingSessionFunction Lambda. This provides near-instant cleanup when contacts end. Created automatically by CloudFormation — you don't configure it, but knowing it exists explains why orphaned sessions get cleaned up quickly.
+      </div>
+    </div>
+    <div class="card should-card">
+      <div class="card-title">10. AWS KMS</div>
+      <div class="card-sub">Encryption Keys = Shield Encryption</div>
+      <div class="card-body">
+        <strong>SF Analogy:</strong> Like Salesforce Shield Platform Encryption — transparent encryption of data at rest. You rarely interact with KMS directly; it works under the hood when Secrets Manager encrypts your stored credentials.<br><br>
+        <strong>For SCC-AC:</strong> SCC-AC creates its own KMS keys (in the <span class="mono">SCC*</span> namespace). The SCCAC-Setup-User IAM policy grants permissions to create and manage these keys. You'll see KMS referenced in the IAM policy JSON during setup.
+      </div>
+    </div>
+  </div>
+
+  <h2><span class="badge badge-nice">NICE TO KNOW</span> — Learn As Needed</h2>
+
+  <div class="card-grid">
+    <div class="card nice-card">
+      <div class="card-title">11. SAML Federation</div>
+      <div class="card-sub">SSO Protocol for Agent Login</div>
+      <div class="card-body">Know that Salesforce acts as the Identity Provider (IdP) for Amazon Connect. Agent SSO works via SAML 2.0 assertions. The most common SSO issue: multi-IdP mode and multi-session support in Connect must be DISABLED for SCV automated SSO to work.</div>
+    </div>
+    <div class="card nice-card">
+      <div class="card-title">12. AWS Step Functions</div>
+      <div class="card-sub">State Machines = Salesforce Flow</div>
+      <div class="card-body">Referenced in the IAM setup policy with stateMachine permissions. May be used in the SCV provisioning workflow (outside SCC-AC's direct Lambda code). Like Salesforce Flow — defines a sequence of steps. You won't configure these directly.</div>
+    </div>
+    <div class="card nice-card">
+      <div class="card-title">13. Amazon Q in Connect</div>
+      <div class="card-sub">AI Agent Assistant = Einstein for Service</div>
+      <div class="card-body">Real-time AI recommendations during contacts. Configured separately in the Amazon Connect console (Connect → Agent Assist). SCC-AC adds a Salesforce utility bar component that surfaces Q recommendations inside the Lightning App during live contacts.</div>
+    </div>
+    <div class="card nice-card">
+      <div class="card-title">14. Contact Lens</div>
+      <div class="card-sub">AI Analytics = Einstein Analytics for Calls</div>
+      <div class="card-body">Enabled via the "Set recording and analytics behavior" block in contact flows. Provides transcription, sentiment analysis, and AI-generated post-contact summaries. The summaries flow via the ContactLens API Named Credential into MessagingSession / VoiceCall records in Salesforce.</div>
+    </div>
+    <div class="card nice-card">
+      <div class="card-title">15. Amazon SQS</div>
+      <div class="card-sub">Message Queue = Async Apex Queue</div>
+      <div class="card-body">Simple Queue Service — buffers messages between producers and consumers. Used as a Lambda event source mapping in the CTR processing pipeline. Like the Salesforce Async Apex queue — prevents Lambda from being overwhelmed by CTR events during high volume. Created automatically by CloudFormation.</div>
+    </div>
+  </div>
+
+  <h2>AWS Console Navigation Quick Reference</h2>
+  <div class="tbl-wrap">
+  <table>
+    <thead><tr><th>Task</th><th>Console Path</th><th>When You Need It</th></tr></thead>
+    <tbody>
+      <tr><td>Check CloudFormation deployment status</td><td>CloudFormation → Stacks → [SCC stack name] → Events tab</td><td>During/after every Guided Setup step</td></tr>
+      <tr><td>Check Lambda errors</td><td>CloudWatch → Log Groups → /aws/lambda/SCCAC-[function name] → latest log stream</td><td>When chat routing fails or MessagingSession not created</td></tr>
+      <tr><td>View Lambda health dashboard</td><td>CloudWatch → Dashboards → SCC-[CC name]</td><td>Operational monitoring</td></tr>
+      <tr><td>Update secret values</td><td>Secrets Manager → SCCAC-Secret-{OrgId} → Retrieve secret value → Edit</td><td>After CloudFormation deploys global stack (Step 6 of Guided Setup)</td></tr>
+      <tr><td>Download certificate JKS file</td><td>S3 → sccac-{account}-bucket-{orgId} → find .jks file → Download</td><td>After certificate generation CloudFormation stack completes</td></tr>
+      <tr><td>Edit contact flows</td><td>Amazon Connect → [Instance alias] → Routing → Flows</td><td>After installing SCC-AC; configuring channelAddressIdentifier</td></tr>
+      <tr><td>Update routing profiles</td><td>Amazon Connect → [Instance alias] → Users → Routing Profiles</td><td>Set SCC-BasicQueue as default</td></tr>
+      <tr><td>Enable flow logs</td><td>Amazon Connect → [Instance] → Flows → Enable flow logs</td><td>During initial setup for debugging</td></tr>
+      <tr><td>Rotate IAM credentials</td><td>IAM → Users → SCCAC-Setup-User → Security credentials → Create access key</td><td>Every 90 days</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  </div>
+</div>
+
+<!-- ─── SECTION 7: FINAL SUMMARY ─── -->
+<div class="section" id="s7">
+  <div class="page-header">
+    <div class="section-meta"><span class="badge badge-sccac">SECTION 7</span></div>
+    <h1>Final Summary</h1>
+    <p class="lead">SCC-AC in simple English, the top pitfalls that kill implementations, and a practical learning roadmap.</p>
+  </div>
+  <div style="padding:32px 40px">
+
+  <h2>SCC-AC Explained in Simple English</h2>
+  <div class="callout callout-success">
+    <strong>The 2-minute explanation:</strong><br><br>
+    Salesforce Service Cloud Voice lets agents handle phone calls inside Salesforce. But it doesn't natively support chats from Amazon Connect, and it doesn't let you route Cases through Amazon Connect's agent capacity.<br><br>
+    <strong>SCC-AC is a managed package + AWS infrastructure that fills these gaps.</strong> When a customer starts a chat, an Amazon Connect contact flow calls a Lambda function which creates a MessagingSession record in Salesforce. Salesforce Omni-Channel then routes that session to the right agent. The agent handles the chat inside Salesforce. When the chat ends, Lambda imports the contact record data back into Salesforce.<br><br>
+    Think of Lambda as the translator that speaks both "Amazon Connect" and "Salesforce" fluently. Everything else (S3, Secrets Manager, CloudWatch, EventBridge, Kinesis) is just the supporting infrastructure that makes Lambda work reliably at scale.
+  </div>
+
+  <h2>The 5 AWS Concepts That Matter Most</h2>
+  <div class="tbl-wrap">
+  <table>
+    <thead><tr><th>#</th><th>Concept</th><th>Why It Matters for SCC-AC</th><th>Start Learning With</th></tr></thead>
+    <tbody>
+      <tr><td>1</td><td><strong>IAM</strong></td><td>90% of setup failures are IAM permission issues. The 4 IAM policy JSONs in the docs are the most important code you'll work with.</td><td>AWS IAM Policy Simulator tool; read the IAM policies in the Prerequisites section line by line</td></tr>
+      <tr><td>2</td><td><strong>Lambda</strong></td><td>Lambda IS SCC-AC. All business logic (create session, route, import CTR, end session) lives in Lambda functions.</td><td>Build a simple Lambda that calls an HTTP endpoint. Understand cold starts and execution roles.</td></tr>
+      <tr><td>3</td><td><strong>CloudFormation</strong></td><td>All AWS resources are deployed via CloudFormation. When setup fails, you debug CloudFormation. When upgrading, CloudFormation updates.</td><td>Learn to read the Events tab on a stack. Understand what "rollback" means and when it happens.</td></tr>
+      <tr><td>4</td><td><strong>CloudWatch Logs</strong></td><td>This is where you debug. Lambda errors go here. Contact flow logs go here. You'll spend a lot of time here.</td><td>Navigate to CloudWatch → Log Groups → find a Lambda log group → open and read a log stream.</td></tr>
+      <tr><td>5</td><td><strong>Amazon Connect Console</strong></td><td>Contact flows, queues, routing profiles — the AWS side of routing configuration lives here.</td><td>Create a test Amazon Connect instance. Build a simple contact flow with a Set Contact Attributes block and a Lambda invocation.</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <h2>Common Implementation Pitfalls</h2>
+  <div class="tbl-wrap">
+  <table>
+    <thead><tr><th>Pitfall</th><th>Symptom</th><th>Root Cause &amp; Fix</th></tr></thead>
+    <tbody>
+      <tr><td><strong>🔴 Not updating Secrets Manager placeholders</strong></td><td>Certificate step fails; Lambdas can't authenticate to Salesforce</td><td>After CloudFormation deploys global stack, manually edit SCCAC-Secret in Secrets Manager — replace both placeholder values with real consumer secret + cert password</td></tr>
+      <tr><td><strong>🔴 Named Credentials not enabled for callouts</strong></td><td>Callout failures; setup steps show no green checkmark</td><td>Every Named Credential must have "Enable for Callouts" toggled ON manually. Check all 6+ Named Credentials after each Guided Setup step</td></tr>
+      <tr><td><strong>🔴 Using sample contact flows directly without cloning</strong></td><td>Configuration lost after SCC-AC package upgrade</td><td>Always Save As → clone → edit the copy. Sample flows get reset on upgrades. This is called out in the docs but easy to miss.</td></tr>
+      <tr><td><strong>🔴 Forgetting to configure channelAddressIdentifier in the flow</strong></td><td>Lambda errors; MessagingSession not created; chat goes nowhere</td><td>After creating the Messaging Channel in SF, note the Channel Address Identifier. Update the Set Contact Attributes block in your cloned inbound flow with this value. Save AND Publish the flow.</td></tr>
+      <tr><td><strong>🔴 Sandbox refresh breaks everything</strong></td><td>SCC-AC stops working entirely after sandbox refresh</td><td>Sandbox refresh changes the Org ID, My Domain, and SCV settings. SCC-AC must be completely uninstalled and reinstalled after a sandbox refresh. There is no patch — full reinstall only.</td></tr>
+      <tr><td><strong>🟡 Permission sets not updated after package upgrade</strong></td><td>Agents can't see new fields/objects added in the upgrade</td><td>After each upgrade, compare SCC Administrator / SCC Agent with the SCC Administrator Placeholder / SCC Agent Placeholder. Manually add any new permissions to your cloned sets.</td></tr>
+      <tr><td><strong>🟡 Multi-IdP or multi-session in Amazon Connect enabled</strong></td><td>Agents can't log into SCV — "We can't log you in" error</td><td>Disable multi-IdP and multi-session support in the Amazon Connect instance settings. These features require user interaction that breaks Salesforce's automated SSO flow.</td></tr>
+      <tr><td><strong>🟡 Queue mapping not configured</strong></td><td>Chat contacts route to SCC-BasicQueue regardless of Omni-Channel setup</td><td>In SF Partner Telephony Contact Centers → Queue Mapping, map each SF Omni-Queue to its corresponding Amazon Connect queue. Without this, Omni-Flow routing returns no queue and falls back to BasicQueue.</td></tr>
+      <tr><td><strong>🟡 Routing configuration model not set to External Routing</strong></td><td>One messaging session uses 100% of agent capacity in Omni-Supervisor</td><td>Change the routing configuration used by the messaging queue to use the "External Routing" model. This lets Connect manage capacity instead of Salesforce.</td></tr>
+      <tr><td><strong>🟡 Chat transfer missing Quick Connects</strong></td><td>Transfer button doesn't show destinations</td><td>Create Quick Connects in Amazon Connect for each agent/queue you want to transfer to, AND add those Quick Connects to the queue's settings. Both steps are required.</td></tr>
+      <tr><td><strong>🟡 IAM credentials not rotated at 90 days</strong></td><td>Setup operations fail; potential production outage</td><td>Rotate SCCAC-Setup-User credentials every 90 days and update both the SF External Credentials and the AWS IAM user simultaneously. Document this as a recurring task.</td></tr>
+      <tr><td><strong>🔵 SCCAC ApiAccessUser deactivated in SF</strong></td><td>Lambda functions can't authenticate; all chat operations fail</td><td>The SCCAC ApiAccessUser is created during Guided Setup Step 2 and is used by Lambdas to access Salesforce APIs. Never deactivate it. Monitor it proactively.</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <h2>Practical Learning Roadmap</h2>
+  <p>A week-by-week guide to becoming productive with Amazon Connect and SCC-AC as a Salesforce architect.</p>
+
+  <div class="roadmap">
+    <div class="roadmap-item">
+      <div class="roadmap-week">Week 1</div>
+      <div class="roadmap-content">
+        <strong>AWS Fundamentals: IAM + Console Navigation</strong>
+        <span>Create a free AWS account. Complete AWS's free "IAM Essentials" course. Practice: create an IAM user, attach a policy, create an IAM role. Navigate to CloudFormation, Lambda, S3, Secrets Manager, CloudWatch. Read all 4 IAM policy JSONs in the SCC-AC prerequisites section and understand what each permission does.</span>
+      </div>
+    </div>
+    <div class="roadmap-item">
+      <div class="roadmap-week">Week 2</div>
+      <div class="roadmap-content">
+        <strong>Amazon Connect Hands-On</strong>
+        <span>Create a free Amazon Connect instance (free tier allows 90 minutes/month). Create a simple contact flow with Set Contact Attributes, Invoke Lambda, and Transfer to Queue blocks. Create a test queue and routing profile. Enable flow logs. Test with the built-in chat simulator. This is the most valuable hands-on exercise you can do.</span>
+      </div>
+    </div>
+    <div class="roadmap-item">
+      <div class="roadmap-week">Week 3</div>
+      <div class="roadmap-content">
+        <strong>Lambda + CloudWatch</strong>
+        <span>Deploy a simple Lambda function that calls a Salesforce API (use any public API). Give it an IAM execution role. Trigger it manually and view the logs in CloudWatch. Then break it intentionally (wrong IAM permission) and practice reading the CloudWatch error. This exercise mirrors exactly what happens in SCC-AC when a Lambda fails.</span>
+      </div>
+    </div>
+    <div class="roadmap-item">
+      <div class="roadmap-week">Week 4</div>
+      <div class="roadmap-content">
+        <strong>Read the Full SCC-AC Docs End-to-End</strong>
+        <span>With your new AWS fundamentals, re-read the entire SCC-AC documentation from Prerequisites through all Appendices. You'll understand it 3x better than the first read. Pay special attention to: Appendix B (all Lambda function descriptions), the IAM policy JSON in Prerequisites, and the 5 sample contact flows in Appendix B.</span>
+      </div>
+    </div>
+    <div class="roadmap-item">
+      <div class="roadmap-week">Week 5</div>
+      <div class="roadmap-content">
+        <strong>End-to-End SCC-AC Installation in a Sandbox</strong>
+        <span>Execute the full SCC-AC installation in a Salesforce sandbox + new AWS account. Follow this reference document section by section. When something fails, practice debugging via CloudFormation events + CloudWatch logs. This will likely take 2-3 days and you'll hit at least 3 of the pitfalls listed above. That's expected and valuable.</span>
+      </div>
+    </div>
+    <div class="roadmap-item">
+      <div class="roadmap-week">Week 6+</div>
+      <div class="roadmap-content">
+        <strong>Feature Configuration + Advanced Topics</strong>
+        <span>Configure each SCC-AC feature: chat attachments (S3 CORS), post-contact summaries (Contact Lens + IAM), unified routing (Cases), Amazon Q assistant. Study Appendix D (minimum runtime IAM permissions) and implement least-privilege security. Set up CloudWatch alarm actions. Plan for the 90-day IAM credential rotation cycle.</span>
+      </div>
+    </div>
+  </div>
+
+  <h2>Quick Reference: SCC-AC vs SCV — What Handles What</h2>
+  <div class="tbl-wrap">
+  <table>
+    <thead><tr><th>Capability</th><th>SCV (Service Cloud Voice)</th><th>SCC-AC</th></tr></thead>
+    <tbody>
+      <tr><td>Inbound Voice Calls</td><td>✅ Primary handler</td><td>Adds AI summaries on top</td></tr>
+      <tr><td>Outbound Voice Calls</td><td>✅ Primary handler</td><td>Adds AI summaries on top</td></tr>
+      <tr><td>Amazon Connect Chat</td><td>❌</td><td>✅ Primary handler</td></tr>
+      <tr><td>Digital Channels (SMS, social)</td><td>❌</td><td>✅ Via Amazon Connect Chat</td></tr>
+      <tr><td>CTR Import (Voice)</td><td>✅ Built-in via VoiceCall</td><td>—</td></tr>
+      <tr><td>CTR Import (Chat)</td><td>❌</td><td>✅ Via Kinesis → Lambda</td></tr>
+      <tr><td>Agent SSO to Amazon Connect</td><td>✅ Built-in via SAML</td><td>Depends on SCV SSO</td></tr>
+      <tr><td>Omni-Channel Status Sync</td><td>✅ Built-in</td><td>Extends for chat contacts</td></tr>
+      <tr><td>Case/Work Routing via Connect</td><td>❌</td><td>✅ Unified Routing feature</td></tr>
+      <tr><td>Post-Contact AI Summaries</td><td>❌</td><td>✅ Via Contact Lens</td></tr>
+      <tr><td>Amazon Q AI Agent Assistance</td><td>❌</td><td>✅ Via utility bar component</td></tr>
+      <tr><td>Observability Logging to S3</td><td>❌</td><td>✅ CCP init + agent activity</td></tr>
+      <tr><td>Chat Attachments</td><td>❌</td><td>✅ Via Amazon Connect + S3</td></tr>
+      <tr><td>Agent-to-Agent Chat Transfer</td><td>❌</td><td>✅ Via Quick Connects + RoutingFunction</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <div class="callout callout-warn">
+    <strong>Final advice:</strong> The biggest risk in SCC-AC projects is the division of AWS and Salesforce responsibilities. Clearly define upfront: who owns the AWS account, who owns IAM, who owns contact flow development, and who owns CloudWatch monitoring. Blurred ownership causes deployment delays and production outages. The IAM credential rotation (every 90 days) requires coordination between both teams and is the most commonly missed operational task.
+  </div>
+
+  </div>
+</div>
+
+</main>
+</div>
+
+<script>
+function show(id) {
+  document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  const idx = {s1:0,s2:1,s3:2,s4:3,s5:4,s6:5,s7:6}[id];
+  document.querySelectorAll('.nav-item')[idx].classList.add('active');
+  document.getElementById('content').scrollTop = 0;
+}
+</script>
+</body>
+</html>
