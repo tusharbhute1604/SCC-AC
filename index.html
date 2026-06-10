@@ -139,21 +139,27 @@ hr{border:none;border-top:1px solid #e8e6e0;margin:24px 0}
   <a class="nav-item" onclick="show('s3')">3 — End-to-End Architecture</a>
   <a class="nav-sub" onclick="show('s3')">3-Layer Model</a>
   <a class="nav-sub" onclick="show('s3')">Data Flows</a>
-  <a class="nav-item" onclick="show('s4')">4 — Deployment & Config</a>
-  <a class="nav-sub" onclick="show('s4')">CloudFormation Stacks</a>
-  <a class="nav-sub" onclick="show('s4')">Team Responsibilities</a>
-  <a class="nav-item" onclick="show('s5')">5 — Voice & Chat Journeys</a>
-  <a class="nav-sub" onclick="show('s5')">Inbound Chat</a>
-  <a class="nav-sub" onclick="show('s5')">Inbound Voice</a>
-  <a class="nav-sub" onclick="show('s5')">Case Routing</a>
-  <a class="nav-item" onclick="show('s6')">6 — AWS Learning Guide</a>
-  <a class="nav-sub" onclick="show('s6')">Must Know</a>
-  <a class="nav-sub" onclick="show('s6')">Should Know</a>
-  <a class="nav-sub" onclick="show('s6')">Nice to Know</a>
-  <a class="nav-item" onclick="show('s7')">7 — Final Summary</a>
-  <a class="nav-sub" onclick="show('s7')">Simple English</a>
-  <a class="nav-sub" onclick="show('s7')">Pitfalls</a>
-  <a class="nav-sub" onclick="show('s7')">Roadmap</a>
+  <a class="nav-item" onclick="show('s4')">4 — Identity &amp; Access</a>
+  <a class="nav-sub" onclick="show('s4')">The 3 Conversations</a>
+  <a class="nav-sub" onclick="show('s4')">Users</a>
+  <a class="nav-sub" onclick="show('s4')">Connected Apps</a>
+  <a class="nav-sub" onclick="show('s4')">Certificates</a>
+  <a class="nav-sub" onclick="show('s4')">Permission Sets</a>
+  <a class="nav-item" onclick="show('s5')">5 — Deployment & Config</a>
+  <a class="nav-sub" onclick="show('s5')">CloudFormation Stacks</a>
+  <a class="nav-sub" onclick="show('s5')">Team Responsibilities</a>
+  <a class="nav-item" onclick="show('s6')">6 — Voice & Chat Journeys</a>
+  <a class="nav-sub" onclick="show('s6')">Inbound Chat</a>
+  <a class="nav-sub" onclick="show('s6')">Inbound Voice</a>
+  <a class="nav-sub" onclick="show('s6')">Case Routing</a>
+  <a class="nav-item" onclick="show('s7')">7 — AWS Learning Guide</a>
+  <a class="nav-sub" onclick="show('s7')">Must Know</a>
+  <a class="nav-sub" onclick="show('s7')">Should Know</a>
+  <a class="nav-sub" onclick="show('s7')">Nice to Know</a>
+  <a class="nav-item" onclick="show('s8')">8 — Final Summary</a>
+  <a class="nav-sub" onclick="show('s8')">Simple English</a>
+  <a class="nav-sub" onclick="show('s8')">Pitfalls</a>
+  <a class="nav-sub" onclick="show('s8')">Roadmap</a>
   <div style="padding:20px 16px;margin-top:auto;border-top:1px solid #2e2d2b;font-size:11px;color:#444">
     Based on official SCC-AC docs<br>amazon-connect.github.io
   </div>
@@ -560,10 +566,364 @@ hr{border:none;border-top:1px solid #e8e6e0;margin:24px 0}
   </div>
 </div>
 
-<!-- ─── SECTION 4: DEPLOYMENT ─── -->
+
+<!-- ─── SECTION 4: IDENTITY & ACCESS ─── -->
 <div class="section" id="s4">
   <div class="page-header">
     <div class="section-meta"><span class="badge badge-sccac">SECTION 4</span></div>
+    <h1>Identity &amp; Access Deep Dive</h1>
+    <p class="lead">Every user, service account, connected app, certificate, and permission set — what it is, why it exists, and exactly what conversation it belongs to.</p>
+  </div>
+  <div style="padding:32px 40px">
+
+  <h2>The One Frame That Makes Everything Click</h2>
+  <p>The confusion comes from trying to understand all these pieces in isolation. The key is to understand that there are <strong>exactly three separate conversations</strong> happening in this system. Every single user, app, and certificate exists to serve one of these three conversations — and only one.</p>
+
+  <div class="tbl-wrap">
+  <table>
+    <thead><tr><th style="width:60px">#</th><th>Conversation</th><th>Who talks to who</th><th>When it happens</th><th>What carries the identity</th></tr></thead>
+    <tbody>
+      <tr style="background:#fff8ec">
+        <td style="text-align:center;font-size:20px">🔶</td>
+        <td><strong>A — Provisioning</strong></td>
+        <td>Salesforce calls AWS to build infrastructure</td>
+        <td>Once during initial setup; again when upgrading or adding a contact center</td>
+        <td>SCCAC-Setup-User IAM access key + secret</td>
+      </tr>
+      <tr style="background:#f0f8ff">
+        <td style="text-align:center;font-size:20px">🔷</td>
+        <td><strong>B — Runtime</strong></td>
+        <td>AWS Lambda calls Salesforce to create/update records</td>
+        <td>On every single contact — inbound chat, CTR import, session close</td>
+        <td>awsscc GLOBAL_CONNECTED_APP + certificate</td>
+      </tr>
+      <tr style="background:#f0fff4">
+        <td style="text-align:center;font-size:20px">🟢</td>
+        <td><strong>C — Agent Login</strong></td>
+        <td>Agent browser authenticates into Amazon Connect</td>
+        <td>Every time an agent opens the Lightning App and becomes available</td>
+        <td>{ContactCenter} Connected App SAML token</td>
+      </tr>
+    </tbody>
+  </table>
+  </div>
+
+  <div class="callout callout-info">
+    <strong>Read everything below through this lens.</strong> Every time you encounter a user, app, or certificate, ask yourself: which conversation does this belong to? A, B, or C? Once you can answer that, its purpose becomes obvious.
+  </div>
+
+  <hr>
+
+  <!-- ── USERS ── -->
+  <h2>Users</h2>
+  <p>There are two types of users in this system: <strong>human users</strong> (real people who log in) and <strong>machine users</strong> (service accounts that code uses to authenticate). They are completely separate and never overlap.</p>
+
+  <h3>Human Users — Real People</h3>
+  <p>These are Salesforce users that human beings log into. You create all three of them manually.</p>
+
+  <div class="tbl-wrap">
+  <table>
+    <thead><tr><th>User</th><th>Profile</th><th>You Create?</th><th>Purpose</th><th>Conversation</th></tr></thead>
+    <tbody>
+      <tr>
+        <td><strong>System Administrator</strong></td>
+        <td>System Administrator</td>
+        <td>Pre-exists in the org</td>
+        <td>Standard Salesforce org admin. Enables services, creates other users. No special SCC-AC role beyond initial org preparation.</td>
+        <td>—</td>
+      </tr>
+      <tr>
+        <td><strong>SCCAC Administrator</strong><br><span style="font-size:11px;color:#888">(First: SCCAC, Last: Administrator)</span></td>
+        <td>System Administrator</td>
+        <td>✅ Yes — in Prerequisites</td>
+        <td>The human who performs the SCC-AC installation. Must be logged in as this user when running the Guided Setup wizard and the Apex anonymous code. Think of it as your dedicated implementation / admin account for SCC-AC.</td>
+        <td>Setup only</td>
+      </tr>
+      <tr>
+        <td><strong>SCCAC Agent</strong><br><span style="font-size:11px;color:#888">(First: SCCAC, Last: Agent)</span></td>
+        <td>Standard User</td>
+        <td>✅ Yes — in Prerequisites</td>
+        <td>A real contact centre agent who handles chats and calls inside Omni-Channel. This is the test agent used during initial setup; in production you would have many users like this one.</td>
+        <td>C — Agent Login</td>
+      </tr>
+    </tbody>
+  </table>
+  </div>
+
+  <h3>Machine Users (Service Accounts) — No Human Ever Logs In As These</h3>
+  <p>These accounts exist solely for one system to authenticate into another programmatically. They have no browser sessions, no passwords in the traditional sense.</p>
+
+  <div class="tbl-wrap">
+  <table>
+    <thead><tr><th>Account</th><th>Lives In</th><th>You Create?</th><th>Purpose</th><th>Conversation</th></tr></thead>
+    <tbody>
+      <tr style="background:#fff8ec">
+        <td><strong>ProvisioningRole</strong></td>
+        <td>AWS IAM (your AWS account)</td>
+        <td>✅ Yes — in Prerequisites</td>
+        <td>Salesforce's own AWS infrastructure (account ID <code>793525387755</code>) assumes this role to create the Amazon Connect instance inside your account. You create it and hand Salesforce the ARN. After the Connect instance exists, this role's primary job is done. It does not run during daily operations.</td>
+        <td>🔶 A — Provisioning<br><span style="font-size:11px;color:#888">(one-time only)</span></td>
+      </tr>
+      <tr style="background:#fff8ec">
+        <td><strong>SCCAC-Setup-User</strong></td>
+        <td>AWS IAM (your AWS account)</td>
+        <td>✅ Yes — in Prerequisites</td>
+        <td>When you enter IAM credentials in Guided Setup Step 4, you are giving Salesforce the keys to this user. Salesforce uses those credentials to call AWS CloudFormation and build all the Lambda functions, S3 buckets, Kinesis streams, and other resources. This is your builder's service account. <strong>Rotate its credentials every 90 days.</strong> Its credentials are stored in Salesforce's External Credentials.</td>
+        <td>🔶 A — Provisioning</td>
+      </tr>
+      <tr style="background:#f0f8ff">
+        <td><strong>SCCAC ApiAccessUser</strong></td>
+        <td>Salesforce</td>
+        <td>❌ Auto-created by SCC-AC in Guided Setup Step 2</td>
+        <td>The Salesforce account that Lambda functions impersonate at runtime. When Lambda creates a MessagingSession, imports a CTR record, or ends a session — it does so as this user. It authenticates into Salesforce using the awsscc GLOBAL_CONNECTED_APP credentials. <strong>Never deactivate this user.</strong> If it goes inactive, all chat operations fail immediately and silently.</td>
+        <td>🔷 B — Runtime</td>
+      </tr>
+    </tbody>
+  </table>
+  </div>
+
+  <div class="callout callout-warn">
+    <strong>The most dangerous confusion:</strong> SCCAC-Setup-User lives in AWS and is used by Salesforce to build infrastructure. SCCAC ApiAccessUser lives in Salesforce and is used by AWS to call Salesforce APIs. Their names sound similar but they are exact opposites in direction.
+  </div>
+
+  <hr>
+
+  <!-- ── CONNECTED APPS ── -->
+  <h2>Connected Apps</h2>
+  <p>There are <strong>three</strong> Connected Apps in this system. Two are created automatically by Salesforce. One you create manually. They serve three completely different purposes and are never interchangeable.</p>
+
+  <!-- CA 1 -->
+  <h3 style="display:flex;align-items:center;gap:10px"><span class="pill pill-green">AUTO-CREATED</span> Connected App 1: <code>{ContactCenterName} Connected App</code></h3>
+  <div class="card sf-card" style="margin-bottom:20px">
+    <div class="card-body">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;font-size:13px">
+        <div><strong>Created by:</strong> Salesforce automatically when you create a Contact Center in Partner Telephony Setup</div>
+        <div><strong>Conversation:</strong> 🟢 C — Agent Login (SAML SSO)</div>
+        <div><strong>Type:</strong> SAML Connected App</div>
+        <div><strong>You configure:</strong> Manage Profiles — add System Administrator and Standard User</div>
+      </div>
+      <hr style="margin:12px 0;border-color:#e0ddd6">
+      <p style="margin:0"><strong>What it does:</strong> Lets agents log into Amazon Connect's CCP automatically — without seeing a separate login screen. When an agent opens the Lightning App, Salesforce uses this Connected App to generate a SAML assertion (a cryptographically signed ticket) and sends it silently to Amazon Connect. Connect validates it and logs the agent in. This is the only reason this Connected App exists.</p>
+    </div>
+  </div>
+
+  <!-- CA 2 -->
+  <h3 style="display:flex;align-items:center;gap:10px"><span class="pill pill-green">AUTO-CREATED</span> Connected App 2: <code>{ContactCenterName} Connected App for RestAPI OAuth</code></h3>
+  <div class="card sf-card" style="margin-bottom:20px">
+    <div class="card-body">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;font-size:13px">
+        <div><strong>Created by:</strong> Salesforce automatically alongside Connected App 1</div>
+        <div><strong>Conversation:</strong> Internal SCV REST operations</div>
+        <div><strong>You configure:</strong> Nothing</div>
+        <div><strong>Docs say:</strong> "Ignore that one"</div>
+      </div>
+      <hr style="margin:12px 0;border-color:#e0ddd6">
+      <p style="margin:0"><strong>What it does:</strong> Handles internal REST API operations between Salesforce and the Amazon Connect instance (outside of SCC-AC's scope). You don't touch it. It is mentioned here only so you don't confuse it with Connected App 1 — they appear right next to each other in App Manager.</p>
+    </div>
+  </div>
+
+  <!-- CA 3 -->
+  <h3 style="display:flex;align-items:center;gap:10px"><span class="pill pill-blue">YOU CREATE</span> Connected App 3: <code>awsscc GLOBAL_CONNECTED_APP</code></h3>
+  <div class="card" style="border-left:3px solid #00A1E0;margin-bottom:20px">
+    <div class="card-body">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;font-size:13px;margin-bottom:12px">
+        <div><strong>Created by:</strong> You — by running Apex anonymous code in the install step</div>
+        <div><strong>Conversation:</strong> 🔷 B — Runtime (Lambda → Salesforce)</div>
+        <div><strong>Auth flow:</strong> OAuth 2.0 Client Credentials (Certificate-based)</div>
+        <div><strong>Run As user:</strong> System Administrator by default; can be a dedicated minimum-access user</div>
+      </div>
+      <hr style="margin:12px 0;border-color:#e0ddd6">
+      <p><strong>What it does:</strong> This is the OAuth gateway for AWS Lambda functions calling Salesforce. Every time Lambda needs to do something in Salesforce — create a MessagingSession, import a CTR record, end a session — it first presents this Connected App's consumer key and certificate to Salesforce's OAuth endpoint to get a short-lived access token. Salesforce issues the token. Lambda uses it for the API call.</p>
+      <p style="margin-bottom:0"><strong>The three values you must handle from this app:</strong></p>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-top:8px;font-size:12px">
+        <div style="background:#e0f0ff;padding:10px;border-radius:6px"><strong>Consumer Key</strong><br>→ Entered in Guided Setup Step 1<br>→ Also stored in AWS Secrets Manager</div>
+        <div style="background:#e0f0ff;padding:10px;border-radius:6px"><strong>Consumer Secret</strong><br>→ Stored manually in AWS Secrets Manager after Step 4<br>(replaces placeholder value)</div>
+        <div style="background:#e0f0ff;padding:10px;border-radius:6px"><strong>Certificate</strong><br>→ Starts as a placeholder<br>→ Replaced by the real certificate in Steps 5 &amp; 6</div>
+      </div>
+    </div>
+  </div>
+
+  <hr>
+
+  <!-- ── CERTIFICATES ── -->
+  <h2>Certificates</h2>
+  <p>There are <strong>three</strong> certificates. They appear at different points in the setup and serve completely different purposes. The confusion arises because two of them are in Salesforce Certificate and Key Management at the same time.</p>
+
+  <!-- CERT 1 -->
+  <h3 style="display:flex;align-items:center;gap:10px"><span class="pill pill-blue">YOU CREATE</span> Certificate 1: Identity Provider Certificate</h3>
+  <div class="tbl-wrap" style="margin-bottom:20px">
+  <table><thead><tr><th width="140">Attribute</th><th>Detail</th></tr></thead><tbody>
+    <tr><td><strong>Created by</strong></td><td>You, in Salesforce Setup → Identity → Identity Provider → Enable Identity Provider. You must create or select any certificate here.</td></tr>
+    <tr><td><strong>Purpose</strong></td><td>Enables Salesforce to act as a SAML Identity Provider. Salesforce uses this certificate to digitally sign the SAML assertions it sends to Amazon Connect for agent SSO.</td></tr>
+    <tr><td><strong>Conversation</strong></td><td>🟢 C — Agent Login only</td></tr>
+    <tr><td><strong>Relationship to SCC-AC</strong></td><td>Nothing to do with Lambda, AWS infrastructure, or the Connected App. It exists purely to make agent SSO work. The name does not matter — any self-signed certificate works.</td></tr>
+    <tr><td><strong>After setup</strong></td><td>Stays in Certificate and Key Management, never changes.</td></tr>
+  </tbody></table>
+  </div>
+
+  <!-- CERT 2 -->
+  <h3 style="display:flex;align-items:center;gap:10px"><span class="pill pill-green">AUTO-CREATED</span> Certificate 2: <code>SCC_PLACE_HOLDER_CERTIFICATE</code></h3>
+  <div class="tbl-wrap" style="margin-bottom:20px">
+  <table><thead><tr><th width="140">Attribute</th><th>Detail</th></tr></thead><tbody>
+    <tr><td><strong>Created by</strong></td><td>The Apex anonymous code — the <code>createCertificate()</code> function creates this automatically when you run the code in Developer Console.</td></tr>
+    <tr><td><strong>Purpose</strong></td><td>A temporary placeholder. The <code>awsscc GLOBAL_CONNECTED_APP</code> Connected App requires a certificate to exist at the moment it is created. But the real certificate (from AWS Lambda) does not exist yet. So this placeholder is used to satisfy that requirement. It is never used at runtime.</td></tr>
+    <tr><td><strong>Conversation</strong></td><td>None at runtime — it is a setup artefact only</td></tr>
+    <tr><td><strong>What happens to it</strong></td><td>Guided Setup Step 6 triggers Lambda functions that call Salesforce and <strong>replace</strong> this placeholder with the real certificate in both the Connected App and the External Credential. After Step 6, this certificate is redundant. You can leave it — it does nothing.</td></tr>
+  </tbody></table>
+  </div>
+
+  <!-- CERT 3 -->
+  <h3 style="display:flex;align-items:center;gap:10px"><span class="pill pill-orange">AWS-GENERATED</span> Certificate 3: <code>scc_certificate_{Timestamp}</code> — The Real One</h3>
+  <div class="tbl-wrap" style="margin-bottom:8px">
+  <table><thead><tr><th width="140">Attribute</th><th>Detail</th></tr></thead><tbody>
+    <tr><td><strong>Created by</strong></td><td>AWS Lambda (SCCAC-CertificateManagementFunction) — triggered automatically when you click "Generate certificate Keystore file" in Guided Setup Step 5.</td></tr>
+    <tr><td><strong>Purpose</strong></td><td>The actual credential that proves Lambda's identity to Salesforce at runtime. Lambda holds the private key (in Secrets Manager). Salesforce holds the public key (in Certificate and Key Management). Together they form the Client Credentials authentication for the awsscc GLOBAL_CONNECTED_APP.</td></tr>
+    <tr><td><strong>Conversation</strong></td><td>🔷 B — Runtime (Lambda → Salesforce), every single contact</td></tr>
+    <tr><td><strong>How it travels</strong></td><td>
+      <div class="flow" style="margin:8px 0">
+        <div class="flow-step"><div class="step-num" style="font-size:10px;width:20px;height:20px">1</div><div class="step-body">Lambda generates RSA key pair → wraps into JKS file → stores in S3 bucket</div></div>
+        <div class="flow-step"><div class="step-num" style="font-size:10px;width:20px;height:20px">2</div><div class="step-body">You download the JKS from S3 → upload to Salesforce Certificate and Key Management (using the JKS password you set in Secrets Manager)</div></div>
+        <div class="flow-step"><div class="step-num" style="font-size:10px;width:20px;height:20px">3</div><div class="step-body">Guided Setup Step 6 → Lambda calls Salesforce → replaces SCC_PLACE_HOLDER_CERTIFICATE in the Connected App with this real certificate</div></div>
+        <div class="flow-step"><div class="step-num" style="font-size:10px;width:20px;height:20px">4</div><div class="step-body">System is live: Lambda uses private key (Secrets Manager) → Salesforce verifies with public key (Certificate and Key Management) → token issued</div></div>
+      </div>
+    </td></tr>
+    <tr><td><strong>JKS password</strong></td><td>The password you chose when editing <code>CERTIFICATE_KEY_PASSWORD_PLACE_HOLDER</code> in Secrets Manager (between Guided Setup Steps 4 and 5). You need this exact password again when uploading the JKS to Salesforce. Write it down.</td></tr>
+  </tbody></table>
+  </div>
+
+  <hr>
+
+  <!-- ── PERMISSION SETS ── -->
+  <h2>Permission Sets</h2>
+  <p>Permission sets come from three sources: the SCV package (pre-installed), the SCC-AC managed package (placeholders you must clone), and ones you create yourself for hardening. Here is every one of them.</p>
+
+  <h3>From the Service Cloud Voice Package (pre-SCC-AC, auto-installed)</h3>
+  <p>These exist in your org as soon as SCV is enabled. They are not part of SCC-AC but are prerequisites for it.</p>
+  <div class="tbl-wrap">
+  <table>
+    <thead><tr><th>Permission Set</th><th>Assign To</th><th>What It Unlocks</th></tr></thead>
+    <tbody>
+      <tr>
+        <td><strong>Contact Center Admin (Partner Telephony)</strong></td>
+        <td>SCCAC Administrator</td>
+        <td>Access to Partner Telephony Setup, ability to create and configure Contact Centers in Salesforce, access to the Guided Setup wizard</td>
+      </tr>
+      <tr>
+        <td><strong>Contact Center Agent (Partner Telephony)</strong></td>
+        <td>SCCAC Agent</td>
+        <td>Access to the embedded CCP softphone widget, ability to receive calls and chats through Amazon Connect, visibility of voice/chat-related fields</td>
+      </tr>
+    </tbody>
+  </table>
+  </div>
+
+  <h3>From the SCC-AC Managed Package (templates — you must clone these)</h3>
+  <p>The managed package cannot ship production-ready permission sets directly — Salesforce rules prevent a package from granting access to its own objects via a shipped permission set. So it ships read-only placeholder templates. You clone them and own the copies.</p>
+  <div class="callout callout-warn" style="margin-bottom:16px">
+    <strong>Why clone instead of edit the originals?</strong> The originals are locked by the managed package and get reset on every upgrade. Your cloned copies are yours to keep, and you are responsible for manually comparing them against the updated placeholders after each upgrade to add any new permissions.
+  </div>
+  <div class="tbl-wrap">
+  <table>
+    <thead><tr><th>Package Ships</th><th>You Clone → Rename To</th><th>API Name</th><th>Assign To</th><th>What It Unlocks</th></tr></thead>
+    <tbody>
+      <tr>
+        <td><strong>SCC Administrator Placeholder</strong></td>
+        <td><strong>SCC Administrator</strong></td>
+        <td><code>SCC_Administrator</code></td>
+        <td>SCCAC Administrator + SCCAC ApiAccessUser</td>
+        <td>Access to all SCC-AC Salesforce objects and Apex classes required for setup and runtime: ContactTraceRecord, MessagingSession fields, SCC_SetupLog__c, all SCC-AC Apex classes. Also required on SCCAC ApiAccessUser so Lambda can write records.</td>
+      </tr>
+      <tr>
+        <td><strong>SCC Agent Placeholder</strong></td>
+        <td><strong>SCC Agent</strong></td>
+        <td><code>SCC_Agent</code></td>
+        <td>SCCAC Agent</td>
+        <td>Access to the SCC-AC Lightning components visible to agents: the chat transcript widget, post-contact summary panel, and Amazon Q AI assistant in the utility bar</td>
+      </tr>
+    </tbody>
+  </table>
+  </div>
+
+  <h3>Optional — Security Hardening Only (Appendix E)</h3>
+  <p>By default, the <code>awsscc GLOBAL_CONNECTED_APP</code> Connected App runs as a System Administrator, meaning Lambda's API calls have full admin rights in Salesforce. If you want to reduce this attack surface, Appendix E describes creating a minimal dedicated RunAs user with only the permissions Lambda actually needs.</p>
+  <div class="tbl-wrap">
+  <table>
+    <thead><tr><th>Permission Set</th><th>You Create?</th><th>Assign To</th><th>Purpose</th></tr></thead>
+    <tbody>
+      <tr>
+        <td><strong>SCC ConnectedApp RunAs</strong></td>
+        <td>✅ Yes — manual creation, optional</td>
+        <td>A new dedicated minimum-access service account user</td>
+        <td>Contains only the four system permissions Lambda actually needs: API Enabled, Customize Application, Modify Metadata Through Metadata API Functions, Allows users to modify Named Credentials and External Credentials. Combined with SCC Administrator (which provides object/field access), this user becomes the lean RunAs account instead of System Administrator.</td>
+      </tr>
+    </tbody>
+  </table>
+  </div>
+
+  <hr>
+
+  <!-- ── VISUAL SUMMARY ── -->
+  <h2>Complete Identity Map — One View</h2>
+  <p>Every identity element placed into the three conversations they serve:</p>
+
+  <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:0;border:2px solid #1a1918;border-radius:10px;overflow:hidden;font-size:12px;margin:16px 0">
+    <!-- Header row -->
+    <div style="background:#FF9900;color:#000;padding:10px 14px;font-weight:700;font-size:13px">🔶 A — Provisioning<br><span style="font-weight:400;font-size:11px">Salesforce builds AWS infrastructure</span></div>
+    <div style="background:#0284c7;color:#fff;padding:10px 14px;font-weight:700;font-size:13px">🔷 B — Runtime<br><span style="font-weight:400;font-size:11px">Lambda calls Salesforce APIs</span></div>
+    <div style="background:#16a34a;color:#fff;padding:10px 14px;font-weight:700;font-size:13px">🟢 C — Agent Login<br><span style="font-weight:400;font-size:11px">Agent SSO into Connect</span></div>
+    <!-- Users row -->
+    <div style="background:#fff8ec;padding:12px 14px;border-top:1px solid #e0ddd6">
+      <div style="font-weight:600;font-size:11px;margin-bottom:6px;text-transform:uppercase;letter-spacing:.04em;color:#92400e">AWS Identity</div>
+      <div style="background:#fef3c7;border-radius:5px;padding:8px;margin-bottom:6px"><strong>ProvisioningRole</strong><br>Assumed by Salesforce to create the Connect instance</div>
+      <div style="background:#fef3c7;border-radius:5px;padding:8px"><strong>SCCAC-Setup-User</strong><br>Used by SF to call CloudFormation during Guided Setup</div>
+    </div>
+    <div style="background:#f0f8ff;padding:12px 14px;border-top:1px solid #e0ddd6">
+      <div style="font-weight:600;font-size:11px;margin-bottom:6px;text-transform:uppercase;letter-spacing:.04em;color:#0369a1">SF Identity</div>
+      <div style="background:#dbeafe;border-radius:5px;padding:8px;margin-bottom:6px"><strong>SCCAC ApiAccessUser</strong><br>Salesforce account that Lambda runs as</div>
+      <div style="background:#dbeafe;border-radius:5px;padding:8px"><strong>awsscc GLOBAL_CONNECTED_APP</strong><br>OAuth gateway: Lambda presents its consumer key + cert here to get a token</div>
+    </div>
+    <div style="background:#f0fff4;padding:12px 14px;border-top:1px solid #e0ddd6">
+      <div style="font-weight:600;font-size:11px;margin-bottom:6px;text-transform:uppercase;letter-spacing:.04em;color:#15803d">SF Identity</div>
+      <div style="background:#dcfce7;border-radius:5px;padding:8px;margin-bottom:6px"><strong>SCCAC Agent (human user)</strong><br>The person logging into both SF and Connect</div>
+      <div style="background:#dcfce7;border-radius:5px;padding:8px""><strong>{ContactCenter} Connected App</strong><br>SAML app — turns SF session into a Connect login</div>
+    </div>
+    <!-- Certificates row -->
+    <div style="background:#fffbeb;padding:12px 14px;border-top:1px solid #e0ddd6">
+      <div style="font-weight:600;font-size:11px;margin-bottom:6px;text-transform:uppercase;letter-spacing:.04em;color:#92400e">Certificate Used</div>
+      <div style="background:#fef3c7;border-radius:5px;padding:8px">None — IAM access key + secret is the credential</div>
+    </div>
+    <div style="background:#eff6ff;padding:12px 14px;border-top:1px solid #e0ddd6">
+      <div style="font-weight:600;font-size:11px;margin-bottom:6px;text-transform:uppercase;letter-spacing:.04em;color:#0369a1">Certificate Used</div>
+      <div style="background:#dbeafe;border-radius:5px;padding:8px"><strong>scc_certificate_{Timestamp}</strong><br>AWS holds private key (Secrets Manager)<br>SF holds public key (Cert &amp; Key Management)</div>
+    </div>
+    <div style="background:#f0fdf4;padding:12px 14px;border-top:1px solid #e0ddd6">
+      <div style="font-weight:600;font-size:11px;margin-bottom:6px;text-transform:uppercase;letter-spacing:.04em;color:#15803d">Certificate Used</div>
+      <div style="background:#dcfce7;border-radius:5px;padding:8px"><strong>Identity Provider Certificate</strong><br>SF uses this to sign the SAML assertion sent to Connect</div>
+    </div>
+    <!-- Permission Sets row -->
+    <div style="background:#fff8ec;padding:12px 14px;border-top:1px solid #e0ddd6">
+      <div style="font-weight:600;font-size:11px;margin-bottom:6px;text-transform:uppercase;letter-spacing:.04em;color:#92400e">Permission Sets</div>
+      <div style="background:#fef3c7;border-radius:5px;padding:8px"><strong>Contact Center Admin (Partner Telephony)</strong><br>Assigned to SCCAC Administrator so they can run setup</div>
+    </div>
+    <div style="background:#eff6ff;padding:12px 14px;border-top:1px solid #e0ddd6">
+      <div style="font-weight:600;font-size:11px;margin-bottom:6px;text-transform:uppercase;letter-spacing:.04em;color:#0369a1">Permission Sets</div>
+      <div style="background:#dbeafe;border-radius:5px;padding:8px;margin-bottom:6px"><strong>SCC Administrator</strong><br>On SCCAC ApiAccessUser — lets Lambda write to SCC-AC objects</div>
+      <div style="background:#dbeafe;border-radius:5px;padding:8px"><strong>SCC ConnectedApp RunAs</strong><br>(optional) Replaces System Admin as the Connected App RunAs</div>
+    </div>
+    <div style="background:#f0fdf4;padding:12px 14px;border-top:1px solid #e0ddd6">
+      <div style="font-weight:600;font-size:11px;margin-bottom:6px;text-transform:uppercase;letter-spacing:.04em;color:#15803d">Permission Sets</div>
+      <div style="background:#dcfce7;border-radius:5px;padding:8px;margin-bottom:6px"><strong>Contact Center Agent (Partner Telephony)</strong><br>Gives agents access to the CCP widget</div>
+      <div style="background:#dcfce7;border-radius:5px;padding:8px"><strong>SCC Agent</strong><br>Gives agents access to SCC-AC Lightning components</div>
+    </div>
+  </div>
+
+  </div>
+</div>
+
+<!-- ─── SECTION 5: DEPLOYMENT ─── -->
+<div class="section" id="s5">
+  <div class="page-header">
+    <div class="section-meta"><span class="badge badge-sccac">SECTION 5</span></div>
     <h1>Deployment &amp; Configuration</h1>
     <p class="lead">What CloudFormation creates, what must be done manually, and who owns each step.</p>
   </div>
@@ -644,10 +1004,10 @@ hr{border:none;border-top:1px solid #e8e6e0;margin:24px 0}
   </div>
 </div>
 
-<!-- ─── SECTION 5: JOURNEYS ─── -->
-<div class="section" id="s5">
+<!-- ─── SECTION 6: JOURNEYS ─── -->
+<div class="section" id="s6">
   <div class="page-header">
-    <div class="section-meta"><span class="badge badge-sccac">SECTION 5</span></div>
+    <div class="section-meta"><span class="badge badge-sccac">SECTION 6</span></div>
     <h1>Voice &amp; Chat Journeys</h1>
     <p class="lead">Step-by-step flows showing exactly which AWS and Salesforce components participate at each stage.</p>
   </div>
@@ -719,10 +1079,10 @@ hr{border:none;border-top:1px solid #e8e6e0;margin:24px 0}
   </div>
 </div>
 
-<!-- ─── SECTION 6: LEARNING GUIDE ─── -->
-<div class="section" id="s6">
+<!-- ─── SECTION 7: LEARNING GUIDE ─── -->
+<div class="section" id="s7">
   <div class="page-header">
-    <div class="section-meta"><span class="badge badge-must">SECTION 6</span></div>
+    <div class="section-meta"><span class="badge badge-must">SECTION 7</span></div>
     <h1>AWS Learning Guide for Salesforce Architects</h1>
     <p class="lead">Every AWS concept ranked by importance, explained through Salesforce analogies. No AWS experience assumed.</p>
   </div>
@@ -878,10 +1238,10 @@ hr{border:none;border-top:1px solid #e8e6e0;margin:24px 0}
   </div>
 </div>
 
-<!-- ─── SECTION 7: FINAL SUMMARY ─── -->
-<div class="section" id="s7">
+<!-- ─── SECTION 8: FINAL SUMMARY ─── -->
+<div class="section" id="s8">
   <div class="page-header">
-    <div class="section-meta"><span class="badge badge-sccac">SECTION 7</span></div>
+    <div class="section-meta"><span class="badge badge-sccac">SECTION 8</span></div>
     <h1>Final Summary</h1>
     <p class="lead">SCC-AC in simple English, the top pitfalls that kill implementations, and a practical learning roadmap.</p>
   </div>
@@ -1016,7 +1376,7 @@ function show(id) {
   document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
   document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
   document.getElementById(id).classList.add('active');
-  const idx = {s1:0,s2:1,s3:2,s4:3,s5:4,s6:5,s7:6}[id];
+  const idx = {s1:0,s2:1,s3:2,s4:3,s5:4,s6:5,s7:6,s8:7}[id];
   document.querySelectorAll('.nav-item')[idx].classList.add('active');
   document.getElementById('content').scrollTop = 0;
 }
